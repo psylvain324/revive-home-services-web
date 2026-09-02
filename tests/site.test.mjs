@@ -17,10 +17,14 @@ test("static HTML exposes metadata and the Netlify form blueprint", async () => 
   const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
   assert.match(html, /<title>Revive Home Services \| Twin Cities Cleaning Experts<\/title>/);
   assert.match(html, /name="description"/);
+  assert.match(html, /rel="canonical" href="https:\/\/revivecleanmn\.com\/"/);
+  assert.match(html, /property="og:url" content="https:\/\/revivecleanmn\.com\/"/);
   assert.match(html, /property="og:image"/);
+  assert.match(html, /name="twitter:image"/);
   assert.match(html, /name="service-request"/);
   assert.match(html, /data-netlify="true"/);
   assert.match(html, /netlify-honeypot="bot-field"/);
+  assert.match(html, /name="bot-field"/);
 });
 
 test("source keeps primary contact and attribution links functional", async () => {

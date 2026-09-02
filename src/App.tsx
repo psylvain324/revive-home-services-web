@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PHONE_DISPLAY = "(952) 222-8309";
 const PHONE_LINK = "tel:+19522228309";
@@ -77,7 +77,22 @@ function ExternalArrow() {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen]);
 
   return (
     <div className="site-shell">
@@ -113,6 +128,7 @@ function App() {
           <button
             className="menu-button"
             type="button"
+            ref={menuButtonRef}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? "Close navigation" : "Open navigation"}
@@ -128,6 +144,7 @@ function App() {
           className={`mobile-menu${menuOpen ? " is-open" : ""}`}
           id="mobile-menu"
           aria-label="Mobile navigation"
+          aria-hidden={!menuOpen}
         >
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="#why-revive" onClick={closeMenu}>Why Revive</a>
