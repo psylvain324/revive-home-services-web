@@ -1,243 +1,143 @@
-import { useEffect, useRef, useState } from "react";
-
-const PHONE_DISPLAY = "(952) 222-8309";
-const PHONE_LINK = "tel:+19522228309";
-const EMAIL = "info@revivecleanmn.com";
+import { useEffect, useState, type FormEvent } from "react";
+import { api } from "./api";
+import { PageShell, PHONE_DISPLAY, PHONE_LINK } from "./SiteChrome";
+import { getSalesVisionAttribution, initializeSalesVision, trackSalesVisionEvent } from "./salesVision";
 
 const services = [
   {
-    name: "Carpet cleaning",
-    description: "Deep, professional cleaning that lifts stains, allergens, and everyday odors while helping extend the life of your carpet.",
-    image: "/images/carpet-cleaning.jpg",
-    link: "https://revivecleanmn.com/carpet-cleaning/",
-    tag: "Lakeville's Best",
+    id: "standard-cleaning",
+    number: "01",
+    name: "Residential cleaning",
+    eyebrow: "A reliable everyday reset",
+    description: "One-time and recurring care tailored around the rooms, priorities, and rhythm of your home.",
+    image: "/images/revive-co-hero.jpg",
+    alt: "Bright, professionally cleaned living room",
+    bullets: ["Kitchens & bathrooms", "Living & sleeping areas", "Weekly, biweekly or custom"],
   },
   {
-    name: "Air duct cleaning",
-    description: "A thorough HVAC-system clean designed to remove dust and buildup, improve airflow, and support healthier indoor air.",
-    image: "/images/air-duct-cleaning.jpg",
-    link: "https://revivecleanmn.com/air-duct-cleaning/",
-    tag: "Whole-home care",
+    id: "commercial-cleaning",
+    number: "02",
+    name: "Commercial cleaning",
+    eyebrow: "Make a polished first impression",
+    description: "Consistent cleaning plans for offices, storefronts, shared spaces, and other professional environments.",
+    image: "/images/commercial-cleaning.jpg",
+    alt: "Professional cleaner wiping a glass table in an office",
+    bullets: ["Office & common areas", "Restrooms & break rooms", "Flexible service schedules"],
   },
   {
-    name: "Hardwood refinishing",
-    description: "Restore worn hardwood with Minnesota's only same-day UV-cured finish—so your family and pets can get back on the floor sooner.",
-    image: "/images/hardwood-refinishing.jpg",
-    link: "https://revivecleanmn.com/hardwood-floor-refinishing/",
-    tag: "Same-day UV cure",
+    id: "move-cleaning",
+    number: "03",
+    name: "Move-in / move-out",
+    eyebrow: "Start fresh or leave it spotless",
+    description: "A detail-forward clean for empty properties, renters, homeowners, property managers, and real estate teams.",
+    image: "/images/move-out-cleaning.jpg",
+    alt: "Cleaners caring for an empty home with hardwood floors",
+    bullets: ["Empty-home detailing", "Cabinets & appliances", "Rental turnover support"],
   },
   {
-    name: "Upholstery cleaning",
-    description: "Refresh sofas, chairs, sectionals, and other upholstered pieces with fabric-aware professional cleaning.",
-    image: "/images/upholstery-cleaning.jpg",
-    link: "https://revivecleanmn.com/upholstery-cleaning/",
-    tag: "Furniture refreshed",
+    id: "post-construction-cleaning",
+    number: "04",
+    name: "Post-construction",
+    eyebrow: "From jobsite to move-in ready",
+    description: "Targeted removal of dust, residue, and construction debris after a renovation, build, or refresh.",
+    image: "/images/construction-cleaning.png",
+    alt: "Professional post-construction cleanup in progress",
+    bullets: ["Fine-dust removal", "Surface & fixture detail", "Residential or commercial"],
   },
 ];
 
-const serviceAreas = [
-  "Apple Valley",
-  "Burnsville",
-  "Chanhassen",
-  "Cottage Grove",
-  "Eagan",
-  "Eden Prairie",
-  "Elko New Market",
-  "Farmington",
-  "Hastings",
-  "Lakeville",
-  "Minneapolis",
-  "Prior Lake",
-  "Rosemount",
-  "Savage",
+const faqs = [
+  ["How does online booking work?", "Choose your service and property details, then select an available time from Revive’s live schedule. Your appointment is held once the request—and any required payment—is completed."],
+  ["Can I request recurring service?", "Yes. You can request weekly, biweekly, monthly, or one-time service. Revive will confirm the scope and recurring schedule with you."],
+  ["Do I need to be at the property?", "Not always. Share access instructions during booking and the team will confirm the plan before your appointment. Never place sensitive access codes in the public contact form."],
+  ["What if my service needs a custom quote?", "Commercial, post-construction, and unusually detailed projects may need a quick follow-up before the price is finalized. You can still reserve your preferred time and submit the details online."],
+  ["Can I pay online?", "When online payments are enabled, secure checkout supports major credit and debit cards plus eligible Apple Pay and Google Pay wallets through Stripe. Revive never stores your full card number."],
+  ["Can I reschedule or cancel?", `Call ${PHONE_DISPLAY} as soon as possible. The team will confirm any timing, deposit, or cancellation terms that apply to your appointment.`],
 ];
-
-const reviewLinks = [
-  {
-    name: "Google",
-    href: "https://www.google.com/search?q=Revive+Carpet+and+Air+Duct+Cleaning",
-  },
-  {
-    name: "Facebook",
-    href: "https://www.facebook.com/revivecarpetandairductcleaning/",
-  },
-  {
-    name: "HomeAdvisor",
-    href: "https://www.homeadvisor.com/rated.ReviveCleaningServices.124751069.html",
-  },
-  {
-    name: "Yelp",
-    href: "https://www.yelp.com/biz/revive-carpet-and-air-duct-cleaning-lakeville",
-  },
-];
-
-function ExternalArrow() {
-  return <span aria-hidden="true">↗</span>;
-}
 
 function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const closeMenu = () => setMenuOpen(false);
+  const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [contactMessage, setContactMessage] = useState("");
 
-  useEffect(() => {
-    if (!menuOpen) return;
+  useEffect(() => initializeSalesVision(), []);
 
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-        menuButtonRef.current?.focus();
-      }
-    };
-
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [menuOpen]);
+  const submitContact = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+    setContactStatus("sending");
+    setContactMessage("");
+    try {
+      const response = await api.post<{ message: string }>("/api/inquiries", {
+        ...data,
+        attribution: getSalesVisionAttribution(),
+      });
+      setContactStatus("sent");
+      setContactMessage(response.message);
+      form.reset();
+      trackSalesVisionEvent("inquiry_submitted", { category: "lead" });
+    } catch (error) {
+      setContactStatus("error");
+      setContactMessage(error instanceof Error ? error.message : "We could not send your message. Please call us instead.");
+    }
+  };
 
   return (
-    <div className="site-shell">
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-
-      <header className="site-header">
-        <div className="topline">
-          <div className="container topline-inner">
-            <span>Locally owned · Serving the Twin Cities</span>
-            <a href={PHONE_LINK}>Call {PHONE_DISPLAY}</a>
-          </div>
-        </div>
-
-        <div className="container nav-row">
-          <a className="brand" href="#top" aria-label="Revive Home Services home">
-            <img src="/images/revive-logo.svg" alt="Revive Home Services" />
-          </a>
-
-          <nav className="desktop-nav" aria-label="Primary navigation">
-            <a href="#services">Services</a>
-            <a href="#why-revive">Why Revive</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#service-area">Service area</a>
-            <a href="#contact">Contact</a>
-          </nav>
-
-          <a className="button button-small desktop-cta" href="#contact">
-            Request service
-          </a>
-
-          <button
-            className="menu-button"
-            type="button"
-            ref={menuButtonRef}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-menu"
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
-
-        <nav
-          className={`mobile-menu${menuOpen ? " is-open" : ""}`}
-          id="mobile-menu"
-          aria-label="Mobile navigation"
-          aria-hidden={!menuOpen}
-        >
-          <a href="#services" onClick={closeMenu}>Services</a>
-          <a href="#why-revive" onClick={closeMenu}>Why Revive</a>
-          <a href="#pricing" onClick={closeMenu}>Pricing</a>
-          <a href="#service-area" onClick={closeMenu}>Service area</a>
-          <a href="#contact" onClick={closeMenu}>Request service</a>
-        </nav>
-      </header>
-
+    <PageShell>
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
-          <div className="hero-shade" />
+          <img className="hero-image" src="/images/revive-co-hero.jpg" alt="A bright, freshly cleaned living room" />
+          <div className="hero-wash" />
           <div className="container hero-content">
-            <p className="eyebrow">Award-winning home care in Minnesota</p>
-            <h1 id="hero-title">
-              A cleaner home.
-              <br />
-              <em>A happier life.</em>
-            </h1>
-            <p className="hero-copy">
-              Best-in-industry carpet, floor, upholstery, and air duct cleaning—delivered with honest pricing and a 100% satisfaction guarantee.
-            </p>
+            <p className="eyebrow">Residential &amp; commercial cleaning</p>
+            <h1 id="hero-title">Revive your space.<br /><em>Reclaim your time.</em></h1>
+            <p>Thoughtful, professional cleaning for homes, businesses, move-outs, and post-construction spaces—with real online scheduling.</p>
             <div className="hero-actions">
-              <a className="button" href="#contact">Request your service</a>
-              <a className="text-link" href={PHONE_LINK}>
-                Or call {PHONE_DISPLAY} <span aria-hidden="true">→</span>
-              </a>
+              <a className="button" href="/book" data-sv-action="book" data-sv-label="hero">See available times</a>
+              <a className="text-link" href={PHONE_LINK} data-sv-action="phone" data-sv-label="hero">Call {PHONE_DISPLAY} <span aria-hidden="true">↗</span></a>
             </div>
-            <ul className="trust-row" aria-label="Why homeowners choose Revive">
-              <li><strong>5-star</strong><span>rated service</span></li>
-              <li><strong>100%</strong><span>satisfaction guarantee</span></li>
-              <li><strong>Local</strong><span>Twin Cities team</span></li>
-            </ul>
+            <div className="trust-strip" aria-label="Service assurances">
+              <span>Licensed, bonded &amp; insured</span>
+              <span>Professional cleaning team</span>
+              <span>Simple, reliable scheduling</span>
+            </div>
           </div>
-          <a className="scroll-cue" href="#services" aria-label="Explore our services">
-            <span>Explore</span>
-            <span aria-hidden="true">↓</span>
-          </a>
+        </section>
+
+        <section className="booking-band" aria-label="Online booking benefits">
+          <div className="container booking-band-grid">
+            <div><strong>01</strong><span>Choose your clean</span><small>Service, home details &amp; add-ons</small></div>
+            <div><strong>02</strong><span>Pick an open time</span><small>Live availability from Revive</small></div>
+            <div><strong>03</strong><span>Confirm securely</span><small>Pay online or request a quote</small></div>
+            <a href="/book" className="button button-light" data-sv-action="book" data-sv-label="booking-band">Start booking</a>
+          </div>
         </section>
 
         <section className="services-section" id="services" aria-labelledby="services-title">
           <div className="container">
             <div className="section-intro">
               <div>
-                <p className="eyebrow">Clean beyond the surface</p>
-                <h2 id="services-title">Every room deserves a fresh start.</h2>
+                <p className="eyebrow">Cleaning for real life</p>
+                <h2 id="services-title">The right clean for every kind of space.</h2>
               </div>
-              <p>
-                Life gets messy. Revive pairs trained technicians with professional-grade equipment to help your home feel clean, healthy, and comfortable again.
-              </p>
+              <p>Choose a starting point and customize the details while booking. If your project needs a closer look, Revive can follow up with a tailored quote.</p>
             </div>
-
             <div className="service-grid">
-              {services.map((service, index) => (
-                <article className="service-card" key={service.name}>
-                  <a
-                    className="service-image"
-                    href={service.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Learn more about ${service.name}`}
-                  >
-                    <img src={service.image} alt="" loading={index > 1 ? "lazy" : "eager"} />
-                    <span>{service.tag}</span>
+              {services.map((service) => (
+                <article className="service-card" key={service.id}>
+                  <a className="service-image" href={`/book?service=${service.id}`} aria-label={`Book ${service.name}`}>
+                    <img src={service.image} alt={service.alt} loading="lazy" />
+                    <span>{service.number}</span>
                   </a>
                   <div className="service-copy">
-                    <p className="service-number">0{index + 1}</p>
+                    <p className="service-eyebrow">{service.eyebrow}</p>
                     <h3>{service.name}</h3>
                     <p>{service.description}</p>
-                    <a href={service.link} target="_blank" rel="noreferrer">
-                      Explore service <ExternalArrow />
-                    </a>
+                    <ul>{service.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
+                    <a className="card-link" href={`/book?service=${service.id}`} data-sv-action="book-service" data-sv-label={service.id}>Book this service <span aria-hidden="true">→</span></a>
                   </div>
                 </article>
               ))}
-            </div>
-
-            <div className="service-more">
-              <div className="service-more-copy">
-                <span className="mini-icon" aria-hidden="true">+</span>
-                <div>
-                  <strong>Tile, grout &amp; LVP cleaning</strong>
-                  <p>Cut through residue and buildup for cleaner-looking floors and brighter grout.</p>
-                </div>
-              </div>
-              <a
-                className="text-link text-link-dark"
-                href="https://revivecleanmn.com/tile-and-grout-cleaning/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                See tile &amp; grout cleaning <ExternalArrow />
-              </a>
             </div>
           </div>
         </section>
@@ -245,249 +145,115 @@ function App() {
         <section className="why-section" id="why-revive" aria-labelledby="why-title">
           <div className="container why-grid">
             <div className="why-visual">
-              <div className="why-photo">
-                <img src="/images/revive-van.png" alt="Revive Home Services service van" loading="lazy" />
-              </div>
-              <div className="award-card">
-                <img src="/images/lakeville-best.svg" alt="Voted Lakeville's Best Carpet Cleaning Company" loading="lazy" />
+              <img className="why-photo" src="/images/commercial-cleaning.jpg" alt="Revive professional cleaning an office surface" loading="lazy" />
+              <div className="insured-badge">
+                <img src="/images/licensed-bonded-insured.webp" alt="Licensed, bonded and insured" loading="lazy" />
               </div>
             </div>
-
             <div className="why-copy">
-              <p className="eyebrow">Results, not gimmicks</p>
-              <h2 id="why-title">Family values meet best-in-class quality.</h2>
-              <p className="lead">
-                Carpet and upholstery are investments—but homes are meant to be lived in. Revive uses honest pricing and proven methods to take on the mess without the bait and switch.
-              </p>
-              <ul className="benefit-list">
-                <li>
-                  <span>01</span>
-                  <div><strong>Trained, detail-minded technicians</strong><p>Knowledgeable care for carpet, tile, upholstery, hardwood, and ductwork.</p></div>
-                </li>
-                <li>
-                  <span>02</span>
-                  <div><strong>Clear, fair pricing</strong><p>Know the published starting prices before you book, with needs explained upfront.</p></div>
-                </li>
-                <li>
-                  <span>03</span>
-                  <div><strong>A 100% satisfaction guarantee</strong><p>If something is amiss after a cleaning, the team is committed to making it right.</p></div>
-                </li>
-              </ul>
-              <a className="button button-dark" href="#contact">Talk with Revive</a>
+              <p className="eyebrow">Care you can count on</p>
+              <h2 id="why-title">A professional clean, without the runaround.</h2>
+              <p className="lead">A great cleaning service should make life easier from the first click. Revive combines dependable scheduling, clear communication, and service plans built around the property—not a one-size-fits-all checklist.</p>
+              <div className="benefit-grid">
+                <div><span>01</span><strong>Reliable scheduling</strong><p>Choose from times the business has actually made available.</p></div>
+                <div><span>02</span><strong>Built around your space</strong><p>Select the service, frequency, add-ons, and property details that matter.</p></div>
+                <div><span>03</span><strong>Secure checkout</strong><p>Eligible card and wallet payments are handled by Stripe—not stored by Revive.</p></div>
+                <div><span>04</span><strong>Human follow-through</strong><p>Questions and quote-based projects go straight to the Revive team.</p></div>
+              </div>
+              <a className="button" href="/book" data-sv-action="book" data-sv-label="why">Plan your cleaning</a>
             </div>
           </div>
         </section>
 
-        <section className="process-section" aria-labelledby="process-title">
+        <section className="process-section" id="process" aria-labelledby="process-title">
           <div className="container">
-            <div className="centered-heading">
-              <p className="eyebrow">Simple from start to finish</p>
-              <h2 id="process-title">Fresh feels closer than you think.</h2>
+            <div className="center-heading">
+              <p className="eyebrow">From busy to booked</p>
+              <h2 id="process-title">Your clean is only a few steps away.</h2>
             </div>
             <ol className="process-grid">
-              <li><span>1</span><strong>Tell us what needs care</strong><p>Send a quick request or call the team with your rooms, surfaces, and concerns.</p></li>
-              <li><span>2</span><strong>Confirm your service</strong><p>Revive helps match your home with the right method, pricing, and appointment.</p></li>
-              <li><span>3</span><strong>Enjoy the reset</strong><p>A trained technician completes the work and makes sure you are happy with the result.</p></li>
+              <li><span>1</span><div><strong>Build your service</strong><p>Tell us about the property, choose the cleaning type and add any special requests.</p></div></li>
+              <li><span>2</span><div><strong>Select your time</strong><p>Pick an available appointment that fits your schedule—no back-and-forth guessing.</p></div></li>
+              <li><span>3</span><div><strong>Confirm and relax</strong><p>Review your details, pay securely when available, and receive a booking confirmation.</p></div></li>
             </ol>
           </div>
         </section>
 
-        <section className="pricing-section" id="pricing" aria-labelledby="pricing-title">
-          <div className="container pricing-grid">
-            <div className="pricing-heading">
-              <p className="eyebrow">Straightforward starting prices</p>
-              <h2 id="pricing-title">Good care should not come with a guessing game.</h2>
-              <p>These published prices make it easier to plan. Final pricing depends on the scope and condition of your home.</p>
-              <a
-                className="text-link text-link-dark"
-                href="https://revivecleanmn.com/pricing/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View complete pricing &amp; promotions <ExternalArrow />
-              </a>
-            </div>
-            <div className="price-list">
-              <a href="#contact"><span><strong>3-room carpet special</strong><small>Up to 200 sq. ft. per room</small></span><b>$159</b></a>
-              <a href="#contact"><span><strong>Air duct cleaning</strong><small>Up to 16 vents / openings</small></span><b>$400</b></a>
-              <a href="#contact"><span><strong>3-seat couch</strong><small>Professional upholstery cleaning</small></span><b>$149</b></a>
-              <a href="#contact"><span><strong>Hardwood clean &amp; polish</strong><small>Price per square foot</small></span><b>$1.50</b></a>
-            </div>
-          </div>
-        </section>
-
-        <section className="reviews-section" aria-labelledby="reviews-title">
-          <div className="container reviews-inner">
-            <div>
-              <p className="eyebrow">Trusted around the Twin Cities</p>
-              <h2 id="reviews-title">Do not just take our word for it.</h2>
-            </div>
-            <div className="rating-card" aria-label="Five star ratings">
-              <div className="stars" aria-label="5 out of 5 stars">★★★★★</div>
-              <strong>5-star service across the platforms homeowners trust.</strong>
-              <div className="review-links">
-                {reviewLinks.map((review) => (
-                  <a key={review.name} href={review.href} target="_blank" rel="noreferrer">
-                    {review.name} <ExternalArrow />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="area-section" id="service-area" aria-labelledby="area-title">
-          <div className="container area-grid">
-            <div>
-              <p className="eyebrow">Proudly serving Minnesota</p>
-              <h2 id="area-title">Local service across the Twin Cities metro.</h2>
-              <p>Do not see your city? Call the team—nearby communities may also be available.</p>
-              <a className="text-link text-link-dark" href={PHONE_LINK}>Check availability: {PHONE_DISPLAY}</a>
-            </div>
-            <ul className="area-list" aria-label="Primary service cities">
-              {serviceAreas.map((area) => <li key={area}>{area}<span aria-hidden="true">•</span></li>)}
+        <section className="feature-split" aria-label="Revive service promise">
+          <div className="feature-image"><img src="/images/move-out-cleaning.jpg" alt="A freshly cleaned, move-in-ready home" loading="lazy" /></div>
+          <div className="feature-copy">
+            <p className="eyebrow">Your priorities, our plan</p>
+            <h2>A clean that fits the space—and the season you’re in.</h2>
+            <p>Recurring home care, a move, a business that needs dependable upkeep, or the final phase of a renovation: Revive starts with the outcome you need.</p>
+            <ul className="check-list">
+              <li>One-time and recurring options</li>
+              <li>Residential and commercial properties</li>
+              <li>Custom notes and add-on requests</li>
+              <li>Online inquiries for quote-based projects</li>
             </ul>
+            <a className="text-link" href="/book">Explore available services <span aria-hidden="true">→</span></a>
+          </div>
+        </section>
+
+        <section className="faq-section" id="faq" aria-labelledby="faq-title">
+          <div className="container faq-grid">
+            <div className="faq-heading">
+              <p className="eyebrow">Helpful details</p>
+              <h2 id="faq-title">Good questions. Clear answers.</h2>
+              <p>Need something specific? Send a note or call and the team can help before you book.</p>
+              <a className="text-link" href={PHONE_LINK}>Call {PHONE_DISPLAY}</a>
+            </div>
+            <div className="faq-list">
+              {faqs.map(([question, answer], index) => (
+                <details key={question} open={index === 0}>
+                  <summary>{question}<span aria-hidden="true">+</span></summary>
+                  <p>{answer}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </section>
 
         <section className="contact-section" id="contact" aria-labelledby="contact-title">
           <div className="container contact-grid">
-            <div className="contact-intro">
-              <p className="eyebrow">Ready for a fresh start?</p>
-              <h2 id="contact-title">Tell us what your home needs.</h2>
-              <p>Share a few details and the Revive team can follow up about the right service for your space.</p>
-              <div className="contact-direct">
-                <a href={PHONE_LINK}><span>Call</span><strong>{PHONE_DISPLAY}</strong></a>
-                <a href={`mailto:${EMAIL}`}><span>Email</span><strong>{EMAIL}</strong></a>
-                <div><span>Hours</span><strong>Monday–Friday, 8 a.m.–6 p.m.</strong></div>
+            <div className="contact-copy">
+              <p className="eyebrow">Not ready to book?</p>
+              <h2 id="contact-title">Tell us what you need.</h2>
+              <p>Questions, commercial properties, construction cleanup, and unique projects are welcome. Share the basics and Revive can follow up.</p>
+              <div className="contact-callout">
+                <span>Prefer to talk?</span>
+                <a href={PHONE_LINK} data-sv-action="phone" data-sv-label="contact">{PHONE_DISPLAY}</a>
               </div>
-              <img src="/images/revive-logo-stacked.svg" alt="" aria-hidden="true" className="contact-mark" />
             </div>
-
-            <form
-              className="contact-form"
-              name="service-request"
-              method="POST"
-              action="/thank-you.html"
-              data-netlify="true"
-              data-netlify-honeypot="bot-field"
-            >
-              <input type="hidden" name="form-name" value="service-request" />
-              <p className="honeypot" aria-hidden="true">
-                <label>Do not fill this out if you are human: <input name="bot-field" tabIndex={-1} autoComplete="off" /></label>
-              </p>
+            <form className="contact-form" onSubmit={submitContact} aria-label="Contact Revive Co">
               <div className="form-row">
-                <label>First name<input name="first-name" type="text" autoComplete="given-name" required /></label>
-                <label>Last name<input name="last-name" type="text" autoComplete="family-name" required /></label>
+                <label>First name<input name="firstName" autoComplete="given-name" required /></label>
+                <label>Last name<input name="lastName" autoComplete="family-name" required /></label>
               </div>
               <div className="form-row">
                 <label>Email<input name="email" type="email" autoComplete="email" required /></label>
                 <label>Phone<input name="phone" type="tel" autoComplete="tel" required /></label>
               </div>
-              <label>Property address<input name="property-address" type="text" autoComplete="street-address" required /></label>
-              <label>
-                Service needed
-                <select name="request-type" defaultValue="" required>
+              <label>What can we help with?
+                <select name="service" defaultValue="" required>
                   <option value="" disabled>Select a service</option>
-                  <option>Carpet cleaning</option>
-                  <option>Air duct or dryer vent cleaning</option>
-                  <option>Hardwood refinishing or care</option>
-                  <option>Upholstery cleaning</option>
-                  <option>Tile, grout, or LVP cleaning</option>
-                  <option>Multiple services / not sure</option>
+                  {services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}
+                  <option value="other">Something else</option>
                 </select>
               </label>
-              <label>Anything else we should know?<textarea name="details" rows={4} /></label>
-              <label className="consent-row">
-                <input name="contact-consent" type="checkbox" value="yes" required />
-                <span>
-                  I agree that Revive may contact me about this request. See the{" "}
-                  <a href="https://revivecleanmn.com/privacy-policy/" target="_blank" rel="noreferrer">privacy policy</a>.
-                </span>
-              </label>
-              <button className="button button-submit" type="submit">Send my request</button>
-              <p className="form-note">For urgent scheduling questions, call <a href={PHONE_LINK}>{PHONE_DISPLAY}</a>.</p>
+              <label>Message<textarea name="message" rows={5} required placeholder="Property type, approximate size, preferred timing, and anything else we should know." /></label>
+              <label className="consent-row"><input name="consent" type="checkbox" required /><span>I agree that Revive Co may contact me about this request. Message and data rates may apply.</span></label>
+              <button className="button" type="submit" disabled={contactStatus === "sending"}>{contactStatus === "sending" ? "Sending…" : "Send inquiry"}</button>
+              <p className={`form-status ${contactStatus}`} role="status">{contactMessage}</p>
             </form>
           </div>
         </section>
-
-        <section className="faq-section" aria-labelledby="faq-title">
-          <div className="container faq-grid">
-            <div>
-              <p className="eyebrow">Good to know</p>
-              <h2 id="faq-title">A few quick answers.</h2>
-            </div>
-            <div className="faq-list">
-              <details><summary>What services does Revive offer?</summary><p>Revive provides carpet, upholstery, tile, grout, and LVP cleaning; air duct and dryer vent cleaning; and hardwood floor care, refinishing, and installation.</p></details>
-              <details><summary>What area does Revive serve?</summary><p>The team serves the greater Twin Cities metro, including Lakeville, Minneapolis, Apple Valley, Eagan, Burnsville, Eden Prairie, Rosemount, Savage, and surrounding communities.</p></details>
-              <details><summary>Is the work guaranteed?</summary><p>Yes. Every cleaning service is backed by Revive&apos;s 100% satisfaction guarantee.</p></details>
-              <details><summary>Can I request multiple services?</summary><p>Yes. Choose “Multiple services / not sure” in the request form and describe what you would like cleaned.</p></details>
-            </div>
-          </div>
-        </section>
       </main>
-
-      <footer className="site-footer">
-        <div className="container footer-grid">
-          <div className="footer-brand">
-            <img src="/images/revive-logo-stacked.svg" alt="Revive Home Services" />
-            <p>Helping Twin Cities families live clean and live happy with honest, best-in-industry home care.</p>
-            <div className="social-links" aria-label="Social media">
-              <a href="https://www.facebook.com/revivecarpetandairductcleaning/" target="_blank" rel="noreferrer" aria-label="Revive on Facebook">fb</a>
-              <a href="https://www.instagram.com/revivecleanmn/" target="_blank" rel="noreferrer" aria-label="Revive on Instagram">ig</a>
-              <a href="https://www.youtube.com/@ReviveCarpetAirDuctCleaning" target="_blank" rel="noreferrer" aria-label="Revive on YouTube">yt</a>
-            </div>
-          </div>
-
-          <div>
-            <h3>Explore</h3>
-            <nav aria-label="Footer navigation">
-              <a href="#services">Services</a>
-              <a href="#why-revive">Why Revive</a>
-              <a href="#pricing">Pricing</a>
-              <a href="#service-area">Service area</a>
-              <a href="#contact">Contact</a>
-            </nav>
-          </div>
-
-          <div>
-            <h3>Services</h3>
-            <nav aria-label="Footer services">
-              {services.map((service) => (
-                <a key={service.name} href={service.link} target="_blank" rel="noreferrer">{service.name}</a>
-              ))}
-              <a href="https://revivecleanmn.com/tile-and-grout-cleaning/" target="_blank" rel="noreferrer">Tile &amp; grout cleaning</a>
-            </nav>
-          </div>
-
-          <div>
-            <h3>Contact</h3>
-            <address>
-              <a href={PHONE_LINK}>{PHONE_DISPLAY}</a>
-              <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-              <span>Twin Cities metro, Minnesota</span>
-              <span>Mon–Fri · 8 a.m.–6 p.m.</span>
-            </address>
-          </div>
-        </div>
-
-        <div className="container footer-bottom">
-          <div>
-            <span>© {new Date().getFullYear()} Revive Home Services. All rights reserved.</span>
-            <a href="https://revivecleanmn.com/privacy-policy/" target="_blank" rel="noreferrer">Privacy</a>
-          </div>
-          <p className="creator-credit">
-            Website created by <span>Phillip Sylvain</span> at{" "}
-            <a href="https://salesvisionconsulting.com" target="_blank" rel="noreferrer">Sales Vision Consulting</a>
-          </p>
-        </div>
-      </footer>
-
-      <div className="mobile-actions" aria-label="Quick contact options">
-        <a href={PHONE_LINK}>Call now</a>
-        <a href="#contact">Request service</a>
+      <div className="mobile-actions" aria-label="Quick actions">
+        <a href={PHONE_LINK} data-sv-action="phone" data-sv-label="mobile">Call</a>
+        <a href="/book" data-sv-action="book" data-sv-label="mobile">Book now</a>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

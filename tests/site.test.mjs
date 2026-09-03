@@ -1,54 +1,68 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-test("build emits the public pages and core assets", async () => {
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("production build emits the complete customer-facing site", async () => {
   await Promise.all([
-    access(new URL("../dist/index.html", import.meta.url)),
-    access(new URL("../dist/thank-you.html", import.meta.url)),
-    access(new URL("../dist/images/revive-logo.svg", import.meta.url)),
-    access(new URL("../dist/images/carpet-cleaning.jpg", import.meta.url)),
-    access(new URL("../dist/robots.txt", import.meta.url)),
-    access(new URL("../dist/sitemap.xml", import.meta.url)),
-  ]);
+    "dist/index.html", "dist/privacy.html", "dist/terms.html", "dist/accessibility.html",
+    "dist/images/revive-co-logo.webp", "dist/images/revive-co-hero.jpg", "dist/images/og-revive-co.png",
+    "dist/robots.txt", "dist/sitemap.xml",
+  ].map((path) => access(new URL(`../${path}`, import.meta.url))));
 });
 
-test("static HTML exposes metadata and the Netlify form blueprint", async () => {
-  const html = await readFile(new URL("../dist/index.html", import.meta.url), "utf8");
-  assert.match(html, /<title>Revive Home Services \| Twin Cities Cleaning Experts<\/title>/);
-  assert.match(html, /name="description"/);
-  assert.match(html, /rel="canonical" href="https:\/\/revivecleanmn\.com\/"/);
-  assert.match(html, /property="og:url" content="https:\/\/revivecleanmn\.com\/"/);
-  assert.match(html, /property="og:image"/);
-  assert.match(html, /name="twitter:image"/);
-  assert.match(html, /name="service-request"/);
-  assert.match(html, /data-netlify="true"/);
-  assert.match(html, /netlify-honeypot="bot-field"/);
-  assert.match(html, /name="bot-field"/);
+test("metadata uses the correct Revive Co identity and production domain", async () => {
+  const html = await read("dist/index.html");
+  assert.match(html, /<title>Revive Co \| Residential &amp; Commercial Cleaning<\/title>/);
+  assert.match(html, /https:\/\/www\.revivecoservices\.com\//);
+  assert.match(html, /images\/og-revive-co\.png/);
+  assert.doesNotMatch(html, /Twin Cities|revivecleanmn/i);
 });
 
-test("source keeps primary contact and attribution links functional", async () => {
-  const source = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
-  assert.match(source, /tel:\+19522228309/);
-  assert.match(source, /mailto:/);
-  assert.match(source, /https:\/\/salesvisionconsulting\.com/);
-  assert.match(source, /Website created by/);
-  assert.match(source, /action="\/thank-you\.html"/);
-  assert.match(source, /100% satisfaction guarantee/);
+test("public experience includes booking, inquiry, payments, and Sales Vision attribution", async () => {
+  const [app, booking, chrome, tracking] = await Promise.all([read("src/App.tsx"), read("src/BookingPage.tsx"), read("src/SiteChrome.tsx"), read("src/salesVision.ts")]);
+  assert.match(app, /Residential cleaning/);
+  assert.match(app, /Commercial cleaning/);
+  assert.match(app, /\/api\/inquiries/);
+  assert.match(booking, /\/api\/availability/);
+  assert.match(booking, /\/api\/bookings/);
+  assert.match(booking, /Apple Pay or Google Pay/);
+  assert.match(chrome, /Sales Vision Consulting/);
+  assert.match(chrome, /data-salesvision-site="revive-co"/);
+  assert.match(tracking, /salesvision_/);
+  assert.doesNotMatch(tracking, /accessNotes|address1|firstName|email/);
 });
 
-test("Netlify uses the verified Vite build and hardened headers", async () => {
-  const config = await readFile(new URL("../netlify.toml", import.meta.url), "utf8");
+test("admin covers operations, settings, customers, expenses, tax planning, and analytics", async () => {
+  const admin = await read("src/AdminPage.tsx");
+  for (const phrase of ["Overview", "Bookings", "Inquiries", "Availability & pricing", "Customers", "Expenses & taxes", "Analytics", "Estimated tax reserve"]) assert.ok(admin.includes(phrase), `missing ${phrase}`);
+  assert.match(admin, /\/api\/admin-login/);
+  assert.match(admin, /Stripe Tax/);
+});
+
+test("backend has every platform endpoint and a transactional migration", async () => {
+  const functions = await readdir(new URL("../netlify/functions", import.meta.url));
+  for (const name of ["public-config.mts", "availability.mts", "bookings.mts", "inquiries.mts", "stripe-webhook.mts", "payment-status.mts", "admin-login.mts", "admin-settings.mts", "admin-dashboard.mts", "admin-bookings.mts", "admin-inquiries.mts", "admin-customers.mts", "admin-expenses.mts", "admin-analytics.mts"]) assert.ok(functions.includes(name), `missing ${name}`);
+  const migration = await read("netlify/migrations/0001_revive_platform/migration.sql");
+  for (const table of ["admin_settings", "business_hours", "blocked_times", "services", "customers", "bookings", "booking_slots", "inquiries", "expenses", "analytics_events"]) assert.match(migration, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
+  assert.match(migration, /PRIMARY KEY \(booking_date, slot_time\)/);
+  assert.match(migration, /base_price_cents[\s\S]*NULL/);
+});
+
+test("Stripe is server-calculated, webhook-verified, and fail-closed", async () => {
+  const [bookings, webhook, settings] = await Promise.all([read("netlify/functions/bookings.mts"), read("netlify/functions/stripe-webhook.mts"), read("netlify/functions/_lib/db.mts")]);
+  assert.match(bookings, /stripe\.checkout\.sessions\.create/);
+  assert.match(bookings, /subtotalCents = availability\.service\.basePriceCents/);
+  assert.match(webhook, /constructEvent\(await request\.text\(\), signature, webhookSecret\)/);
+  assert.match(settings, /paymentEnabled: Boolean\(row\.payment_enabled\) && Boolean\(process\.env\.STRIPE_SECRET_KEY\)/);
+});
+
+test("Netlify configuration enables functions, security headers, and SPA routes", async () => {
+  const config = await read("netlify.toml");
   assert.match(config, /command = "npm run build"/);
   assert.match(config, /publish = "dist"/);
+  assert.match(config, /directory = "netlify\/functions"/);
   assert.match(config, /Content-Security-Policy/);
-  assert.match(config, /X-Content-Type-Options/);
   assert.match(config, /from = "\/\*"/);
-});
-
-test("the package is rooted at the Revive repository", async () => {
-  const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-  assert.equal(packageJson.name, "revive-home-services-web");
-  assert.equal(packageJson.scripts.build, "tsc --noEmit && vite build");
-  assert.equal(packageJson.scripts.test, "npm run build && node --test tests/site.test.mjs");
 });

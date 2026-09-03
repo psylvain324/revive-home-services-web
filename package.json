@@ -13,11 +13,15 @@
     "lint": "eslint src",
     "check": "tsc --noEmit",
     "test": "npm run build && node --test tests/site.test.mjs",
-    "audit:site": "npm run lint && npm test && npm audit --audit-level=high"
+    "audit:site": "npm run lint && npm test && npm audit --audit-level=high",
+    "admin:hash": "node scripts/hash-admin-password.mjs"
   },
   "dependencies": {
+    "@netlify/database": "^2.0.1",
+    "@netlify/functions": "^6.0.0",
     "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react-dom": "19.2.6",
+    "stripe": "^22.6.1"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
