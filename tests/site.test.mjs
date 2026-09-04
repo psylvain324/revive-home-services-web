@@ -7,7 +7,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("production build emits the complete customer-facing site", async () => {
   await Promise.all([
     "dist/index.html", "dist/privacy.html", "dist/terms.html", "dist/accessibility.html",
-    "dist/images/revive-co-logo.webp", "dist/images/revive-co-hero.jpg", "dist/images/og-revive-co.png",
+    "dist/images/revive-co-logo-transparent.png", "dist/images/revive-co-hero.jpg", "dist/images/og-revive-co.png",
     "dist/robots.txt", "dist/sitemap.xml",
   ].map((path) => access(new URL(`../${path}`, import.meta.url))));
 });
@@ -22,13 +22,14 @@ test("metadata uses the correct Revive Co identity and production domain", async
 
 test("public experience includes booking, inquiry, payments, and Sales Vision attribution", async () => {
   const [app, booking, chrome, tracking] = await Promise.all([read("src/App.tsx"), read("src/BookingPage.tsx"), read("src/SiteChrome.tsx"), read("src/salesVision.ts")]);
-  assert.match(app, /Residential cleaning/);
-  assert.match(app, /Commercial cleaning/);
+  assert.match(app, /Residential Cleaning/);
+  assert.match(app, /Commercial Cleaning/);
   assert.match(app, /\/api\/inquiries/);
   assert.match(booking, /\/api\/availability/);
   assert.match(booking, /\/api\/bookings/);
   assert.match(booking, /Apple Pay or Google Pay/);
   assert.match(chrome, /Sales Vision Consulting/);
+  assert.match(chrome, /revive-co-logo-transparent\.png/);
   assert.match(chrome, /data-salesvision-site="revive-co"/);
   assert.match(tracking, /salesvision_/);
   assert.doesNotMatch(tracking, /accessNotes|address1|firstName|email/);
@@ -36,7 +37,7 @@ test("public experience includes booking, inquiry, payments, and Sales Vision at
 
 test("admin covers operations, settings, customers, expenses, tax planning, and analytics", async () => {
   const admin = await read("src/AdminPage.tsx");
-  for (const phrase of ["Overview", "Bookings", "Inquiries", "Availability & pricing", "Customers", "Expenses & taxes", "Analytics", "Estimated tax reserve"]) assert.ok(admin.includes(phrase), `missing ${phrase}`);
+  for (const phrase of ["Overview", "Bookings", "Inquiries", "Availability & Pricing", "Customers", "Expenses & Taxes", "Analytics", "Estimated tax reserve"]) assert.ok(admin.includes(phrase), `missing ${phrase}`);
   assert.match(admin, /\/api\/admin-login/);
   assert.match(admin, /Stripe Tax/);
 });

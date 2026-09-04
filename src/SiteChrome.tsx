@@ -25,16 +25,16 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
     <header className={`site-header${compact ? " site-header-solid" : ""}`}>
       <div className="container nav-row">
         <a className="brand" href="/#top" aria-label="Revive Co home">
-          <img src="/images/revive-co-logo.webp" alt="Revive Co Residential and Commercial Services" />
+          <img src="/images/revive-co-logo-transparent.png" alt="Revive Co Residential and Commercial Services" />
         </a>
         <nav className="desktop-nav" aria-label="Primary navigation">
           <a href="/#services">Services</a>
           <a href="/#why-revive">Why Revive</a>
-          <a href="/#process">How it works</a>
+          <a href="/#process">How It Works</a>
           <a href="/#contact">Contact</a>
         </nav>
         <a className="phone-link" href={PHONE_LINK} data-sv-action="phone" data-sv-label="header">{PHONE_DISPLAY}</a>
-        <a className="button button-small desktop-cta" href="/book" data-sv-action="book" data-sv-label="header">Book now</a>
+        <a className="button button-small desktop-cta" href="/book" data-sv-action="book" data-sv-label="header">Book Now</a>
         <button
           className="menu-button"
           type="button"
@@ -51,10 +51,10 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
         <nav className="mobile-menu is-open" id="mobile-menu" aria-label="Mobile navigation">
           <a href="/#services" onClick={close}>Services</a>
           <a href="/#why-revive" onClick={close}>Why Revive</a>
-          <a href="/#process" onClick={close}>How it works</a>
+          <a href="/#process" onClick={close}>How It Works</a>
           <a href="/#contact" onClick={close}>Contact</a>
           <a href={PHONE_LINK} onClick={close}>Call {PHONE_DISPLAY}</a>
-          <a href="/book" onClick={close}>Book now</a>
+          <a href="/book" onClick={close}>Book Now</a>
         </nav>
       )}
     </header>
@@ -66,17 +66,17 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="container footer-main">
         <div className="footer-brand">
-          <img src="/images/revive-co-logo.webp" alt="Revive Co" />
+          <img src="/images/revive-co-logo-transparent.png" alt="Revive Co" />
           <p>Professional residential and commercial cleaning with dependable scheduling and detail-minded care.</p>
           <a className="footer-phone" href={PHONE_LINK}>{PHONE_DISPLAY}</a>
         </div>
         <div>
           <h3>Services</h3>
           <nav aria-label="Footer services">
-            <a href="/#services">Residential cleaning</a>
-            <a href="/#services">Commercial cleaning</a>
-            <a href="/#services">Move-in / move-out</a>
-            <a href="/#services">Post-construction</a>
+            <a href="/#services">Residential Cleaning</a>
+            <a href="/#services">Commercial Cleaning</a>
+            <a href="/#services">Move-In / Move-Out</a>
+            <a href="/#services">Post-Construction</a>
           </nav>
         </div>
         <div>
@@ -85,13 +85,13 @@ export function SiteFooter() {
             <a href="/#why-revive">Why Revive</a>
             <a href="/#faq">FAQ</a>
             <a href="/#contact">Contact</a>
-            <a href="/admin">Admin portal</a>
+            <a href="/admin">Admin Portal</a>
           </nav>
         </div>
         <div>
-          <h3>Get started</h3>
+          <h3>Get Started</h3>
           <p>Choose a service, see open times, and request your cleaning online.</p>
-          <a className="button button-light" href="/book" data-sv-action="book" data-sv-label="footer">Book a cleaning</a>
+          <a className="button button-light" href="/book" data-sv-action="book" data-sv-label="footer">Book a Cleaning</a>
         </div>
       </div>
       <div className="container footer-bottom">

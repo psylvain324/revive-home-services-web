@@ -58,11 +58,11 @@ CREATE TABLE IF NOT EXISTS services (
 );
 
 INSERT INTO services (id, name, short_description, description, base_price_cents, duration_minutes, active, sort_order) VALUES
-  ('standard-cleaning', 'Residential cleaning', 'A dependable clean for the essential rooms in your home.', 'One-time or recurring residential cleaning tailored to the property.', NULL, 120, true, 1),
-  ('deep-cleaning', 'Deep cleaning', 'Extra time and attention for a more complete reset.', 'Detailed cleaning for buildup and areas that need more attention.', NULL, 210, true, 2),
-  ('move-cleaning', 'Move-in / move-out', 'Empty-property detailing for a fresh handoff.', 'For renters, homeowners, real estate teams, and property managers.', NULL, 240, true, 3),
-  ('commercial-cleaning', 'Commercial cleaning', 'A custom plan for offices and professional spaces.', 'Flexible commercial care built around the property and operating schedule.', NULL, 180, true, 4),
-  ('post-construction-cleaning', 'Post-construction', 'Fine-dust and surface detailing after building work.', 'Renovation and new-construction cleanup for move-in-ready results.', NULL, 300, true, 5)
+  ('standard-cleaning', 'Residential Cleaning', 'A dependable clean for the essential rooms in your home.', 'One-time or recurring residential cleaning tailored to the property.', NULL, 120, true, 1),
+  ('deep-cleaning', 'Deep Cleaning', 'Extra time and attention for a more complete reset.', 'Detailed cleaning for buildup and areas that need more attention.', NULL, 210, true, 2),
+  ('move-cleaning', 'Move-In / Move-Out', 'Empty-property detailing for a fresh handoff.', 'For renters, homeowners, real estate teams, and property managers.', NULL, 240, true, 3),
+  ('commercial-cleaning', 'Commercial Cleaning', 'A custom plan for offices and professional spaces.', 'Flexible commercial care built around the property and operating schedule.', NULL, 180, true, 4),
+  ('post-construction-cleaning', 'Post-Construction', 'Fine-dust and surface detailing after building work.', 'Renovation and new-construction cleanup for move-in-ready results.', NULL, 300, true, 5)
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS add_ons (
@@ -76,10 +76,10 @@ CREATE TABLE IF NOT EXISTS add_ons (
 );
 
 INSERT INTO add_ons (id, name, price_cents, duration_minutes, active, sort_order) VALUES
-  ('inside-oven', 'Inside oven', 0, 30, true, 1),
-  ('inside-refrigerator', 'Inside refrigerator', 0, 30, true, 2),
-  ('interior-windows', 'Interior windows', 0, 45, true, 3),
-  ('laundry-linens', 'Laundry / linen change', 0, 30, true, 4)
+  ('inside-oven', 'Inside Oven', 0, 30, true, 1),
+  ('inside-refrigerator', 'Inside Refrigerator', 0, 30, true, 2),
+  ('interior-windows', 'Interior Windows', 0, 45, true, 3),
+  ('laundry-linens', 'Laundry / Linen Change', 0, 30, true, 4)
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS customers (
