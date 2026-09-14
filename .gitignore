@@ -37,6 +37,7 @@ yarn-error.log*
 
 # netlify local state
 /.netlify/
+/deno.lock
 
 /dist/
 /.wrangler/

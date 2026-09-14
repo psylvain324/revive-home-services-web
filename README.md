@@ -81,7 +81,22 @@ npm audit --audit-level=high
 
 The repository is configured with `npm run build`, `dist`, `netlify/functions`, Node.js 22, SPA fallbacks, and durable relational storage through Netlify Database.
 
-Link the repository to the intended Netlify site, initialize the database, configure secrets, and deploy. The canonical production URL in metadata is `https://www.revivecoservices.com/`; attach that domain to the Netlify site before launching.
+Before the first deploy, authenticate and link this checkout to the intended Netlify project:
+
+```bash
+npx netlify login
+npx netlify link
+```
+
+Initialize Netlify Database, configure the required secrets above, and validate the exact production build locally:
+
+```bash
+npm ci
+npm run audit:site
+npx netlify build --offline
+```
+
+Push the linked production branch for continuous deployment, or create a draft deploy with `npx netlify deploy --build`. The canonical production URL in metadata is `https://www.revivecoservices.com/`; attach that domain to the Netlify project before launching.
 
 ## Operational notes
 

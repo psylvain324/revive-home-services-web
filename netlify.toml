@@ -11,7 +11,8 @@
   node_bundler = "esbuild"
 
 [dev]
-  command = "npm run dev"
+  framework = "#custom"
+  command = "npm run dev:netlify"
   targetPort = 5173
   port = 8888
 
@@ -20,6 +21,7 @@
   [headers.values]
     Content-Security-Policy = "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; upgrade-insecure-requests"
     Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
@@ -37,9 +39,21 @@
     Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
-  for = "/index.html"
+  for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/booking/success"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    X-Robots-Tag = "noindex, nofollow"
 
 [[headers]]
   for = "/api/*"

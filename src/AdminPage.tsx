@@ -42,7 +42,7 @@ function AdminLogin({ onLogin }: { onLogin: (session: AdminSession) => void }) {
   return (
     <main className="admin-login-page">
       <div className="admin-login-art">
-        <a href="/" className="admin-brand"><img src="/images/revive-co-logo-transparent.png" alt="Revive Co" /></a>
+        <a href="/" className="admin-brand"><img src="/images/revive-co-logo-transparent.png" alt="Revive Co" width="360" height="240" /></a>
         <div><p className="eyebrow">Operations Portal</p><h1>Your Schedule.<br />Your Numbers.<br /><em>One Clean View.</em></h1><p>Secure tools for bookings, customers, revenue, availability, expenses, and tax planning.</p></div>
         <p className="admin-credit">Platform by <a href="https://salesvisionconsulting.com">Sales Vision Consulting</a></p>
       </div>
@@ -218,7 +218,7 @@ export default function AdminPage() {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <a className="admin-logo" href="/"><img src="/images/revive-co-logo-transparent.png" alt="Revive Co" /></a>
+        <a className="admin-logo" href="/"><img src="/images/revive-co-logo-transparent.png" alt="Revive Co" width="360" height="240" /></a>
         <nav aria-label="Admin navigation">
           {navItems.map(([id, label]) => <button type="button" key={id} className={activeTab === id ? "active" : ""} onClick={() => setActiveTab(id)}><span aria-hidden="true">{id === "overview" ? "⌂" : id === "bookings" ? "▣" : id === "inquiries" ? "✉" : id === "availability" ? "◷" : id === "customers" ? "◎" : id === "expenses" ? "$" : "↗"}</span>{label}</button>)}
         </nav>

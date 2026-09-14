@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 
 Disallow: /admin
+Disallow: /booking/success
 
 Sitemap: https://www.revivecoservices.com/sitemap.xml

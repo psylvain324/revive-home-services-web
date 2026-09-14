@@ -32,8 +32,13 @@ export default async (request: Request) => {
       await db.pool.query(
         `INSERT INTO booking_slots (booking_date, slot_time, booking_id)
          SELECT b.booking_date, slot::time, b.id FROM bookings b,
-           generate_series(b.booking_date + b.start_time, b.booking_date + b.end_time - interval '1 minute', interval '30 minute') slot
-         WHERE b.id=$1 ON CONFLICT DO NOTHING`, [id],
+           admin_settings settings,
+           generate_series(
+             b.booking_date + b.start_time,
+             b.booking_date + b.end_time + settings.buffer_minutes * interval '1 minute' - interval '1 minute',
+             settings.slot_interval_minutes * interval '1 minute'
+           ) slot
+         WHERE b.id=$1 AND settings.id=1 ON CONFLICT DO NOTHING`, [id],
       );
     }
     return json({ updated: true });

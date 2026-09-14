@@ -8,9 +8,10 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "dev:netlify": "vite --host 0.0.0.0 --mode netlify",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "lint": "eslint src",
+    "lint": "eslint src netlify/functions",
     "check": "tsc --noEmit",
     "test": "npm run build && node --test tests/site.test.mjs",
     "audit:site": "npm run lint && npm test && npm audit --audit-level=high",

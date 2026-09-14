@@ -11,6 +11,9 @@ const services = [
     eyebrow: "A Reliable Everyday Reset",
     description: "One-time and recurring care tailored around the rooms, priorities, and rhythm of your home.",
     image: "/images/revive-co-hero.jpg",
+    smallImage: "/images/revive-co-hero-768.jpg",
+    width: 2048,
+    height: 896,
     alt: "Bright, professionally cleaned living room",
     bullets: ["Kitchens & Bathrooms", "Living & Sleeping Areas", "Weekly, Biweekly or Custom"],
   },
@@ -21,6 +24,9 @@ const services = [
     eyebrow: "Make a Polished First Impression",
     description: "Consistent cleaning plans for offices, storefronts, shared spaces, and other professional environments.",
     image: "/images/commercial-cleaning.jpg",
+    smallImage: "/images/commercial-cleaning-768.jpg",
+    width: 2048,
+    height: 1152,
     alt: "Professional cleaner wiping a glass table in an office",
     bullets: ["Office & Common Areas", "Restrooms & Break Rooms", "Flexible Service Schedules"],
   },
@@ -31,6 +37,9 @@ const services = [
     eyebrow: "Start Fresh or Leave It Spotless",
     description: "A detail-forward clean for empty properties, renters, homeowners, property managers, and real estate teams.",
     image: "/images/move-out-cleaning.jpg",
+    smallImage: "/images/move-out-cleaning-768.jpg",
+    width: 2048,
+    height: 1152,
     alt: "Cleaners caring for an empty home with hardwood floors",
     bullets: ["Empty-Home Detailing", "Cabinets & Appliances", "Rental Turnover Support"],
   },
@@ -40,7 +49,10 @@ const services = [
     name: "Post-Construction",
     eyebrow: "From Jobsite to Move-In Ready",
     description: "Targeted removal of dust, residue, and construction debris after a renovation, build, or refresh.",
-    image: "/images/construction-cleaning.png",
+    image: "/images/construction-cleaning.jpg",
+    smallImage: "/images/construction-cleaning-768.jpg",
+    width: 1152,
+    height: 922,
     alt: "Professional post-construction cleanup in progress",
     bullets: ["Fine-Dust Removal", "Surface & Fixture Detail", "Residential or Commercial"],
   },
@@ -86,7 +98,7 @@ function App() {
     <PageShell>
       <main id="main">
         <section className="hero" id="top" aria-labelledby="hero-title">
-          <img className="hero-image" src="/images/revive-co-hero.jpg" alt="A bright, freshly cleaned living room" />
+          <img className="hero-image" src="/images/revive-co-hero.jpg" srcSet="/images/revive-co-hero-768.jpg 768w, /images/revive-co-hero.jpg 2048w" sizes="100vw" alt="A bright, freshly cleaned living room" width="2048" height="896" fetchPriority="high" />
           <div className="hero-wash" />
           <div className="container hero-content">
             <p className="eyebrow">Residential &amp; Commercial Cleaning</p>
@@ -125,9 +137,9 @@ function App() {
             <div className="service-grid">
               {services.map((service) => (
                 <article className="service-card" key={service.id}>
-                  <a className="service-image" href={`/book?service=${service.id}`} aria-label={`Book ${service.name}`}>
-                    <img src={service.image} alt={service.alt} loading="lazy" />
-                    <span>{service.number}</span>
+                  <a className="service-image" href={`/book?service=${service.id}`} aria-label={`${service.number} — Book ${service.name}`}>
+                    <img src={service.image} srcSet={`${service.smallImage} 768w, ${service.image} ${service.width}w`} sizes="(max-width: 1100px) calc(100vw - 48px), 300px" alt={service.alt} width={service.width} height={service.height} loading="lazy" decoding="async" />
+                    <span aria-hidden="true">{service.number}</span>
                   </a>
                   <div className="service-copy">
                     <p className="service-eyebrow">{service.eyebrow}</p>
@@ -145,9 +157,9 @@ function App() {
         <section className="why-section" id="why-revive" aria-labelledby="why-title">
           <div className="container why-grid">
             <div className="why-visual">
-              <img className="why-photo" src="/images/commercial-cleaning.jpg" alt="Revive professional cleaning an office surface" loading="lazy" />
+              <img className="why-photo" src="/images/commercial-cleaning.jpg" srcSet="/images/commercial-cleaning-768.jpg 768w, /images/commercial-cleaning.jpg 2048w" sizes="(max-width: 860px) calc(100vw - 34px), 520px" alt="Revive professional cleaning an office surface" width="2048" height="1152" loading="lazy" decoding="async" />
               <div className="insured-badge">
-                <img src="/images/licensed-bonded-insured.webp" alt="Licensed, bonded and insured" loading="lazy" />
+                <img src="/images/licensed-bonded-insured.webp" alt="Licensed, bonded and insured" width="478" height="478" loading="lazy" decoding="async" />
               </div>
             </div>
             <div className="why-copy">
@@ -180,7 +192,7 @@ function App() {
         </section>
 
         <section className="feature-split" aria-label="Revive service promise">
-          <div className="feature-image"><img src="/images/move-out-cleaning.jpg" alt="A freshly cleaned, move-in-ready home" loading="lazy" /></div>
+          <div className="feature-image"><img src="/images/move-out-cleaning.jpg" srcSet="/images/move-out-cleaning-768.jpg 768w, /images/move-out-cleaning.jpg 2048w" sizes="(max-width: 860px) 100vw, 50vw" alt="A freshly cleaned, move-in-ready home" width="2048" height="1152" loading="lazy" decoding="async" /></div>
           <div className="feature-copy">
             <p className="eyebrow">Your Priorities, Our Plan</p>
             <h2>A Clean That Fits the Space—and the Season You’re In.</h2>

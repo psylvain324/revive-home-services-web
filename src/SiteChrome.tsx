@@ -25,7 +25,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
     <header className={`site-header${compact ? " site-header-solid" : ""}`}>
       <div className="container nav-row">
         <a className="brand" href="/#top" aria-label="Revive Co home">
-          <img src="/images/revive-co-logo-transparent.png" alt="Revive Co Residential and Commercial Services" />
+          <img src="/images/revive-co-logo-transparent.png" alt="Revive Co Residential and Commercial Services" width="360" height="240" decoding="async" />
         </a>
         <nav className="desktop-nav" aria-label="Primary navigation">
           <a href="/#services">Services</a>
@@ -66,7 +66,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="container footer-main">
         <div className="footer-brand">
-          <img src="/images/revive-co-logo-transparent.png" alt="Revive Co" />
+          <img src="/images/revive-co-logo-transparent.png" alt="Revive Co" width="360" height="240" loading="lazy" decoding="async" />
           <p>Professional residential and commercial cleaning with dependable scheduling and detail-minded care.</p>
           <a className="footer-phone" href={PHONE_LINK}>{PHONE_DISPLAY}</a>
         </div>

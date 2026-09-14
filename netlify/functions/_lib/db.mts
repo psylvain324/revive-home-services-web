@@ -49,9 +49,9 @@ export async function settingsBundle() {
     currency: String(row.currency), leadTimeHours: Number(row.lead_time_hours), slotIntervalMinutes: Number(row.slot_interval_minutes),
     bufferMinutes: Number(row.buffer_minutes), paymentEnabled: Boolean(row.payment_enabled) && Boolean(process.env.STRIPE_SECRET_KEY),
     taxEnabled: Boolean(row.tax_enabled), depositPercent: Number(row.deposit_percent), estimatedTaxRate: Number(row.estimated_tax_rate),
-    hours: hours.rows.map((item: SettingsRow) => ({ weekday: Number(item.weekday), enabled: Boolean(item.enabled), openTime: String(item.open_time).slice(0, 5), closeTime: String(item.close_time).slice(0, 5) })),
-    services: services.rows.map(toService), addOns: addOns.rows.map(toAddOn),
-    blockedTimes: blocks.rows.map((item: SettingsRow) => ({ id: String(item.id), startsAt: String(item.starts_at).replace(" ", "T").slice(0, 16), endsAt: String(item.ends_at).replace(" ", "T").slice(0, 16), reason: String(item.reason) })),
+    hours: (hours.rows as SettingsRow[]).map((item) => ({ weekday: Number(item.weekday), enabled: Boolean(item.enabled), openTime: String(item.open_time).slice(0, 5), closeTime: String(item.close_time).slice(0, 5) })),
+    services: (services.rows as SettingsRow[]).map(toService), addOns: (addOns.rows as SettingsRow[]).map(toAddOn),
+    blockedTimes: (blocks.rows as SettingsRow[]).map((item) => ({ id: String(item.id), startsAt: String(item.starts_at).replace(" ", "T").slice(0, 16), endsAt: String(item.ends_at).replace(" ", "T").slice(0, 16), reason: String(item.reason) })),
   };
 }
 
@@ -90,8 +90,8 @@ export async function availableSlots(date: string, serviceId: string, addOnIds: 
     db.pool.query("SELECT slot_time FROM booking_slots WHERE booking_date = $1", [date]),
     db.pool.query("SELECT starts_at, ends_at FROM blocked_times WHERE starts_at::date <= $1::date AND ends_at::date >= $1::date", [date]),
   ]);
-  const occupied = new Set(occupiedResult.rows.map((row: Record<string, unknown>) => String(row.slot_time).slice(0, 5)));
-  const blocks = blocksResult.rows.map((row: Record<string, unknown>) => ({ start: String(row.starts_at).replace(" ", "T"), end: String(row.ends_at).replace(" ", "T") }));
+  const occupied = new Set((occupiedResult.rows as SettingsRow[]).map((row) => String(row.slot_time).slice(0, 5)));
+  const blocks = (blocksResult.rows as SettingsRow[]).map((row) => ({ start: String(row.starts_at).replace(" ", "T"), end: String(row.ends_at).replace(" ", "T") }));
   const now = localNow(config.timezone);
   const dayDistance = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${now.date}T00:00:00Z`)) / 86_400_000);
   const minutesFromNowAtMidnight = dayDistance * 1440 - timeToMinutes(now.time);
