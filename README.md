@@ -64,7 +64,7 @@ Payment activation is intentionally fail-closed: a service with no price remains
 
 ## Database
 
-The schema and safe seed data are in `netlify/migrations/0001_revive_platform/migration.sql`. The initial migration creates settings, business hours, blocked time, services, add-ons, customers, bookings, collision-proof booking slots, inquiries, expenses, and analytics events. Seeded services do not have prices, preventing an accidental charge before the owner enters approved amounts.
+The schema and safe seed data are in `netlify/database/migrations/0001_revive_platform/migration.sql`, the path Netlify Database scans during deploys. The initial migration creates settings, business hours, blocked time, services, add-ons, customers, bookings, collision-proof booking slots, inquiries, expenses, and analytics events. Seeded services do not have prices, preventing an accidental charge before the owner enters approved amounts.
 
 ## Quality checks
 

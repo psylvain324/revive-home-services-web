@@ -46,7 +46,7 @@ test("admin covers operations, settings, customers, expenses, tax planning, and 
 test("backend has every platform endpoint and a transactional migration", async () => {
   const functions = await readdir(new URL("../netlify/functions", import.meta.url));
   for (const name of ["public-config.mts", "availability.mts", "bookings.mts", "inquiries.mts", "stripe-webhook.mts", "payment-status.mts", "admin-login.mts", "admin-settings.mts", "admin-dashboard.mts", "admin-bookings.mts", "admin-inquiries.mts", "admin-customers.mts", "admin-expenses.mts", "admin-analytics.mts"]) assert.ok(functions.includes(name), `missing ${name}`);
-  const migration = await read("netlify/migrations/0001_revive_platform/migration.sql");
+  const migration = await read("netlify/database/migrations/0001_revive_platform/migration.sql");
   for (const table of ["admin_settings", "business_hours", "blocked_times", "services", "customers", "bookings", "booking_slots", "inquiries", "expenses", "analytics_events"]) assert.match(migration, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
   assert.match(migration, /PRIMARY KEY \(booking_date, slot_time\)/);
   assert.match(migration, /base_price_cents[\s\S]*NULL/);

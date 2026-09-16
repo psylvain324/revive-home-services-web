@@ -1,3 +1,4 @@
+-- Initial schema and safe seed data for the Revive Co service platform.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS admin_settings (
