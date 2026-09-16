@@ -74,6 +74,11 @@ test("Netlify configuration enables functions, security headers, and SPA routes"
   assert.match(robots, /Disallow: \/booking\/success/);
 });
 
+test("production build declares the Node types required by Netlify functions", async () => {
+  const packageJson = JSON.parse(await read("package.json"));
+  assert.ok(packageJson.devDependencies["@types/node"], "missing direct @types/node dependency");
+});
+
 test("production assets stay split and within performance budgets", async () => {
   const [html, assets, construction, responsiveHero, logo, socialCard] = await Promise.all([
     read("dist/index.html"),
