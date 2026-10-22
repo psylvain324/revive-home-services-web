@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { scryptSync } from "node:crypto";
 import { access, readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
 
@@ -7,7 +8,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("production build emits the complete customer-facing site", async () => {
   await Promise.all([
     "dist/index.html", "dist/privacy.html", "dist/terms.html", "dist/accessibility.html",
-    "dist/images/revive-co-logo-transparent.png", "dist/images/revive-co-hero.jpg", "dist/images/revive-co-hero-768.jpg",
+    "dist/images/revive-homeservices-logo.png", "dist/images/revive-homeservices-logo-compact.png", "dist/images/favicon.png", "dist/images/phillip-sylvain.jpg", "dist/images/revive-co-hero.jpg", "dist/images/revive-co-hero-768.jpg",
     "dist/images/og-revive-co.jpg", "dist/images/construction-cleaning.jpg", "dist/images/construction-cleaning-768.jpg",
     "dist/robots.txt", "dist/sitemap.xml",
   ].map((path) => access(new URL(`../${path}`, import.meta.url))));
@@ -21,26 +22,46 @@ test("metadata uses the correct Revive Co identity and production domain", async
   assert.doesNotMatch(html, /Twin Cities|revivecleanmn/i);
 });
 
-test("public experience includes booking, inquiry, payments, and Sales Vision attribution", async () => {
-  const [app, booking, chrome, tracking] = await Promise.all([read("src/App.tsx"), read("src/BookingPage.tsx"), read("src/SiteChrome.tsx"), read("src/salesVision.ts")]);
+test("public experience is request-only and retains detailed service choices", async () => {
+  const [app, requestPage, inquiries, chrome, tracking] = await Promise.all([read("src/App.tsx"), read("src/BookingPage.tsx"), read("netlify/functions/inquiries.mts"), read("src/SiteChrome.tsx"), read("src/salesVision.ts")]);
   assert.match(app, /Residential Cleaning/);
   assert.match(app, /Commercial Cleaning/);
   assert.match(app, /\/api\/inquiries/);
-  assert.match(booking, /\/api\/availability/);
-  assert.match(booking, /\/api\/bookings/);
-  assert.match(booking, /Apple Pay or Google Pay/);
+  assert.match(app, /Choose Your Clean/);
+  assert.match(app, /Scope, Pricing &amp; Availability Follow-Up/);
+  assert.doesNotMatch(app, /process-section|A Simple First Step/);
+  assert.match(requestPage, /Property &amp; Frequency/);
+  assert.match(requestPage, /Optional Add-On Requests/);
+  assert.match(requestPage, /\/api\/inquiries/);
+  assert.match(requestPage, /No scheduling or payment happens online/);
+  assert.doesNotMatch(requestPage, /\/api\/availability|\/api\/bookings|checkoutUrl|paymentChoice/);
+  assert.match(inquiries, /https:\/\/api\.resend\.com\/emails/);
+  assert.match(inquiries, /reply_to: input\.email/);
   assert.match(chrome, /Sales Vision Consulting/);
-  assert.match(chrome, /revive-co-logo-transparent\.png/);
+  assert.match(chrome, /Phillip Sylvain/);
+  assert.match(chrome, /phillip-sylvain\.jpg/);
+  assert.match(chrome, /revive-homeservices-logo-compact\.png/);
+  assert.match(chrome, /header-socials/);
+  assert.doesNotMatch(app, /<a className="service-image"/);
   assert.match(chrome, /data-salesvision-site="revive-co"/);
+  for (const platform of ["instagram.com", "facebook.com", "linkedin.com", "google.com\/maps"]) assert.match(chrome, new RegExp(platform));
+  assert.match(chrome, /noopener noreferrer/);
   assert.match(tracking, /salesvision_/);
   assert.doesNotMatch(tracking, /accessNotes|address1|firstName|email/);
 });
 
 test("admin covers operations, settings, customers, expenses, tax planning, and analytics", async () => {
-  const admin = await read("src/AdminPage.tsx");
+  const [admin, adminLogin] = await Promise.all([read("src/AdminPage.tsx"), read("netlify/functions/admin-login.mts")]);
   for (const phrase of ["Overview", "Bookings", "Inquiries", "Availability & Pricing", "Customers", "Expenses & Taxes", "Analytics", "Estimated tax reserve"]) assert.ok(admin.includes(phrase), `missing ${phrase}`);
   assert.match(admin, /\/api\/admin-login/);
   assert.match(admin, /Stripe Tax/);
+  assert.match(adminLogin, /psylvain324@gmail\.com/);
+  assert.match(adminLogin, /STATIC_ADMIN_PASSWORD_HASH/);
+  assert.doesNotMatch(adminLogin, /password123/);
+  const staticPasswordHash = adminLogin.match(/STATIC_ADMIN_PASSWORD_HASH = "([^"]+)"/)?.[1];
+  assert.ok(staticPasswordHash, "static administrator password hash is missing");
+  const [, salt, expected] = staticPasswordHash.split("$");
+  assert.equal(scryptSync("password123", salt, 64).toString("hex"), expected);
 });
 
 test("backend has every platform endpoint and a transactional migration", async () => {
@@ -85,7 +106,7 @@ test("production assets stay split and within performance budgets", async () => 
     readdir(new URL("../dist/assets", import.meta.url)),
     stat(new URL("../dist/images/construction-cleaning.jpg", import.meta.url)),
     stat(new URL("../dist/images/revive-co-hero-768.jpg", import.meta.url)),
-    stat(new URL("../dist/images/revive-co-logo-transparent.png", import.meta.url)),
+    stat(new URL("../dist/images/revive-homeservices-logo-compact.png", import.meta.url)),
     stat(new URL("../dist/images/og-revive-co.jpg", import.meta.url)),
   ]);
   const entry = html.match(/src="\/(assets\/index-[^"]+\.js)"/)?.[1];

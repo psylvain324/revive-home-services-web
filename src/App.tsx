@@ -1,15 +1,17 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "./api";
+import { SiteIcon, type SiteIconName } from "./SiteIcon";
 import { PageShell, PHONE_DISPLAY, PHONE_LINK } from "./SiteChrome";
 import { getSalesVisionAttribution, initializeSalesVision, trackSalesVisionEvent } from "./salesVision";
 
 const services = [
   {
     id: "standard-cleaning",
+    icon: "home" as SiteIconName,
     number: "01",
     name: "Residential Cleaning",
     eyebrow: "A Reliable Everyday Reset",
-    description: "One-time and recurring care tailored around the rooms, priorities, and rhythm of your home.",
+    description: "Flexible one-time or recurring care built around your home's priorities.",
     image: "/images/revive-co-hero.jpg",
     smallImage: "/images/revive-co-hero-768.jpg",
     width: 2048,
@@ -19,10 +21,11 @@ const services = [
   },
   {
     id: "commercial-cleaning",
+    icon: "building" as SiteIconName,
     number: "02",
     name: "Commercial Cleaning",
     eyebrow: "Make a Polished First Impression",
-    description: "Consistent cleaning plans for offices, storefronts, shared spaces, and other professional environments.",
+    description: "Reliable cleaning plans for offices, storefronts, and shared workspaces.",
     image: "/images/commercial-cleaning.jpg",
     smallImage: "/images/commercial-cleaning-768.jpg",
     width: 2048,
@@ -32,10 +35,11 @@ const services = [
   },
   {
     id: "move-cleaning",
+    icon: "key" as SiteIconName,
     number: "03",
     name: "Move-In / Move-Out",
     eyebrow: "Start Fresh or Leave It Spotless",
-    description: "A detail-forward clean for empty properties, renters, homeowners, property managers, and real estate teams.",
+    description: "Detail-focused cleaning for empty homes, turnovers, and property handoffs.",
     image: "/images/move-out-cleaning.jpg",
     smallImage: "/images/move-out-cleaning-768.jpg",
     width: 2048,
@@ -45,10 +49,11 @@ const services = [
   },
   {
     id: "post-construction-cleaning",
+    icon: "sparkles" as SiteIconName,
     number: "04",
     name: "Post-Construction",
     eyebrow: "From Jobsite to Move-In Ready",
-    description: "Targeted removal of dust, residue, and construction debris after a renovation, build, or refresh.",
+    description: "Fine-dust and residue cleanup after renovations and new builds.",
     image: "/images/construction-cleaning.jpg",
     smallImage: "/images/construction-cleaning-768.jpg",
     width: 1152,
@@ -59,12 +64,12 @@ const services = [
 ];
 
 const faqs = [
-  ["How Does Online Booking Work?", "Choose your service and property details, then select an available time from Revive’s live schedule. Your appointment is held once the request—and any required payment—is completed."],
-  ["Can I Request Recurring Service?", "Yes. You can request weekly, biweekly, monthly, or one-time service. Revive will confirm the scope and recurring schedule with you."],
-  ["Do I Need to Be at the Property?", "Not always. Share access instructions during booking and the team will confirm the plan before your appointment. Never place sensitive access codes in the public contact form."],
-  ["What If My Service Needs a Custom Quote?", "Commercial, post-construction, and unusually detailed projects may need a quick follow-up before the price is finalized. You can still reserve your preferred time and submit the details online."],
-  ["Can I Pay Online?", "When online payments are enabled, secure checkout supports major credit and debit cards plus eligible Apple Pay and Google Pay wallets through Stripe. Revive never stores your full card number."],
-  ["Can I Reschedule or Cancel?", `Call ${PHONE_DISPLAY} as soon as possible. The team will confirm any timing, deposit, or cancellation terms that apply to your appointment.`],
+  ["How Does the Online Request Work?", "Choose the service, share a few details about the property, and send your contact information. Revive will review the request and follow up personally to discuss scope, pricing, and availability."],
+  ["Does Submitting the Form Schedule an Appointment?", "No. The online form is a contact request only. An appointment is not scheduled until Revive speaks with you and confirms the details."],
+  ["Can I Request Recurring Service?", "Yes. You can request weekly, biweekly, monthly, one-time, or custom service. Revive will confirm the right plan and schedule with you."],
+  ["What If My Service Needs a Custom Quote?", "That is welcome. Commercial, post-construction, move, and detailed residential projects can all be described in the request form so Revive can follow up with the right questions."],
+  ["Should I Include Access Instructions?", "Share general property details, but never place alarm codes, lock codes, or other sensitive access information in the online form. Arrange those details directly with Revive."],
+  ["How Will Revive Contact Me?", `The team will use the email address or phone number you provide. You can also call ${PHONE_DISPLAY} if you prefer to speak with someone directly.`],
 ];
 
 function App() {
@@ -103,50 +108,47 @@ function App() {
           <div className="container hero-content">
             <p className="eyebrow">Residential &amp; Commercial Cleaning</p>
             <h1 id="hero-title">Revive Your Space.<br /><em>Reclaim Your Time.</em></h1>
-            <p>Thoughtful, professional cleaning for homes, businesses, move-outs, and post-construction spaces—with real online scheduling.</p>
+            <p>Thoughtful, professional cleaning for homes, businesses, move-outs, and post-construction spaces. Send a service request and the Revive team will follow up personally.</p>
             <div className="hero-actions">
-              <a className="button" href="/book" data-sv-action="book" data-sv-label="hero">See Available Times</a>
+              <a className="button" href="/contact" data-sv-action="request-service" data-sv-label="hero">Request Service</a>
               <a className="text-link" href={PHONE_LINK} data-sv-action="phone" data-sv-label="hero">Call {PHONE_DISPLAY} <span aria-hidden="true">↗</span></a>
             </div>
             <div className="trust-strip" aria-label="Service assurances">
               <span>Licensed, Bonded &amp; Insured</span>
               <span>Professional Cleaning Team</span>
-              <span>Simple, Reliable Scheduling</span>
+              <span>Personal, Reliable Follow-Through</span>
             </div>
           </div>
         </section>
 
-        <section className="booking-band" aria-label="Online booking benefits">
+        <section className="booking-band" aria-label="Online service request steps">
           <div className="container booking-band-grid">
-            <div><strong>01</strong><span>Choose Your Clean</span><small>Service, Home Details &amp; Add-Ons</small></div>
-            <div><strong>02</strong><span>Pick an Open Time</span><small>Live Availability From Revive</small></div>
-            <div><strong>03</strong><span>Confirm Securely</span><small>Pay Online or Request a Quote</small></div>
-            <a href="/book" className="button button-light" data-sv-action="book" data-sv-label="booking-band">Start Booking</a>
+            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="broom" /></span><div><strong>01</strong><span>Choose Your Clean</span><small>Service, Home Details &amp; Add-Ons</small></div></div>
+            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="message" /></span><div><strong>02</strong><span>Share Your Request</span><small>Priorities, Questions &amp; Preferred Timing</small></div></div>
+            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="phone" /></span><div><strong>03</strong><span>Hear From Revive</span><small>Scope, Pricing &amp; Availability Follow-Up</small></div></div>
+            <a href="/contact" className="button button-light" data-sv-action="request-service" data-sv-label="request-band">Start a Request</a>
           </div>
         </section>
 
         <section className="services-section" id="services" aria-labelledby="services-title">
           <div className="container">
-            <div className="section-intro">
-              <div>
-                <p className="eyebrow">Cleaning for Real Life</p>
-                <h2 id="services-title">The Right Clean for Every Kind of Space.</h2>
-              </div>
-              <p>Choose a starting point and customize the details while booking. If your project needs a closer look, Revive can follow up with a tailored quote.</p>
+            <div className="section-intro section-intro-centered">
+              <p className="eyebrow">Cleaning for Real Life</p>
+              <h2 id="services-title">The Right Clean for Every Kind of Space.</h2>
             </div>
             <div className="service-grid">
               {services.map((service) => (
                 <article className="service-card" key={service.id}>
-                  <a className="service-image" href={`/book?service=${service.id}`} aria-label={`${service.number} — Book ${service.name}`}>
+                  <div className="service-image">
                     <img src={service.image} srcSet={`${service.smallImage} 768w, ${service.image} ${service.width}w`} sizes="(max-width: 1100px) calc(100vw - 48px), 300px" alt={service.alt} width={service.width} height={service.height} loading="lazy" decoding="async" />
                     <span aria-hidden="true">{service.number}</span>
-                  </a>
+                  </div>
                   <div className="service-copy">
-                    <p className="service-eyebrow">{service.eyebrow}</p>
+                    <p className="service-eyebrow"><SiteIcon name={service.icon} />{service.eyebrow}</p>
                     <h3>{service.name}</h3>
                     <p>{service.description}</p>
                     <ul>{service.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-                    <a className="card-link" href={`/book?service=${service.id}`} data-sv-action="book-service" data-sv-label={service.id}>Book This Service <span aria-hidden="true">→</span></a>
+                    <a className="card-link" href={`/contact?service=${service.id}`} data-sv-action="request-service" data-sv-label={service.id}>Request This Service <span aria-hidden="true">→</span></a>
                   </div>
                 </article>
               ))}
@@ -165,29 +167,15 @@ function App() {
             <div className="why-copy">
               <p className="eyebrow">Care You Can Count On</p>
               <h2 id="why-title">A Professional Clean, Without the Runaround.</h2>
-              <p className="lead">A great cleaning service should make life easier from the first click. Revive combines dependable scheduling, clear communication, and service plans built around the property—not a one-size-fits-all checklist.</p>
+              <p className="lead">A great cleaning service should make life easier from the first click. Revive combines clear communication, thoughtful follow-through, and service plans built around the property—not a one-size-fits-all checklist.</p>
               <div className="benefit-grid">
-                <div><span>01</span><strong>Reliable Scheduling</strong><p>Choose from times the business has actually made available.</p></div>
+                <div><span>01</span><strong>Easy Service Requests</strong><p>Share the essentials online without committing to an appointment.</p></div>
                 <div><span>02</span><strong>Built Around Your Space</strong><p>Select the service, frequency, add-ons, and property details that matter.</p></div>
-                <div><span>03</span><strong>Secure Checkout</strong><p>Eligible card and wallet payments are handled by Stripe—not stored by Revive.</p></div>
-                <div><span>04</span><strong>Human Follow-Through</strong><p>Questions and quote-based projects go straight to the Revive team.</p></div>
+                <div><span>03</span><strong>No Online Commitment</strong><p>Submitting a request does not schedule service or collect payment.</p></div>
+                <div><span>04</span><strong>Human Follow-Through</strong><p>Your request goes to the Revive team for a personal response.</p></div>
               </div>
-              <a className="button" href="/book" data-sv-action="book" data-sv-label="why">Plan Your Cleaning</a>
+              <a className="button" href="/contact" data-sv-action="request-service" data-sv-label="why">Tell Us What You Need</a>
             </div>
-          </div>
-        </section>
-
-        <section className="process-section" id="process" aria-labelledby="process-title">
-          <div className="container">
-            <div className="center-heading">
-              <p className="eyebrow">From Busy to Booked</p>
-              <h2 id="process-title">Your Clean Is Only a Few Steps Away.</h2>
-            </div>
-            <ol className="process-grid">
-              <li><span>1</span><div><strong>Build Your Service</strong><p>Tell us about the property, choose the cleaning type and add any special requests.</p></div></li>
-              <li><span>2</span><div><strong>Select Your Time</strong><p>Pick an available appointment that fits your schedule—no back-and-forth guessing.</p></div></li>
-              <li><span>3</span><div><strong>Confirm and Relax</strong><p>Review your details, pay securely when available, and receive a booking confirmation.</p></div></li>
-            </ol>
           </div>
         </section>
 
@@ -195,15 +183,16 @@ function App() {
           <div className="feature-image"><img src="/images/move-out-cleaning.jpg" srcSet="/images/move-out-cleaning-768.jpg 768w, /images/move-out-cleaning.jpg 2048w" sizes="(max-width: 860px) 100vw, 50vw" alt="A freshly cleaned, move-in-ready home" width="2048" height="1152" loading="lazy" decoding="async" /></div>
           <div className="feature-copy">
             <p className="eyebrow">Your Priorities, Our Plan</p>
-            <h2>A Clean That Fits the Space—and the Season You’re In.</h2>
-            <p>Recurring home care, a move, a business that needs dependable upkeep, or the final phase of a renovation: Revive starts with the outcome you need.</p>
+            <h2>The Right Cleaning for Whatever Reason, in Whatever Season</h2>
+            <p>Recurring Home maintenance, a move or home listing, a one off deep clean, a business that needs dependable upkeep, or the final phase of a renovation - Revive fits the job for whatever you need.</p>
             <ul className="check-list">
               <li>One-Time and Recurring Options</li>
               <li>Residential and Commercial Properties</li>
-              <li>Custom Notes and Add-On Requests</li>
-              <li>Online Inquiries for Quote-Based Projects</li>
+              <li>Custom Projects and Add-On Requests</li>
+              <li>Comprehensive and Transparent Pricing</li>
+              <li>High Quality Work at an Affordable Price</li>
             </ul>
-            <a className="text-link" href="/book">Explore Available Services <span aria-hidden="true">→</span></a>
+            <a className="text-link" href="/contact">Request a Service <span aria-hidden="true">→</span></a>
           </div>
         </section>
 
@@ -212,7 +201,7 @@ function App() {
             <div className="faq-heading">
               <p className="eyebrow">Helpful Details</p>
               <h2 id="faq-title">Good Questions. Clear Answers.</h2>
-              <p>Need something specific? Send a note or call and the team can help before you book.</p>
+              <p>Need something specific? Send a request or call and the team will help you plan the right service.</p>
               <a className="text-link" href={PHONE_LINK}>Call {PHONE_DISPLAY}</a>
             </div>
             <div className="faq-list">
@@ -229,7 +218,7 @@ function App() {
         <section className="contact-section" id="contact" aria-labelledby="contact-title">
           <div className="container contact-grid">
             <div className="contact-copy">
-              <p className="eyebrow">Not Ready to Book?</p>
+              <p className="eyebrow">Have a Question?</p>
               <h2 id="contact-title">Tell Us What You Need.</h2>
               <p>Questions, commercial properties, construction cleanup, and unique projects are welcome. Share the basics and Revive can follow up.</p>
               <div className="contact-callout">
@@ -263,7 +252,7 @@ function App() {
       </main>
       <div className="mobile-actions" aria-label="Quick actions">
         <a href={PHONE_LINK} data-sv-action="phone" data-sv-label="mobile">Call</a>
-        <a href="/book" data-sv-action="book" data-sv-label="mobile">Book Now</a>
+        <a href="/contact" data-sv-action="request-service" data-sv-label="mobile">Request Service</a>
       </div>
     </PageShell>
   );
