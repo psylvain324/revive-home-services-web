@@ -31,12 +31,3 @@ export function safeNumber(value: unknown, min: number, max: number, fallback: n
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
 }
-
-export function requestOrigin(request: Request) {
-  const configured = process.env.URL || process.env.DEPLOY_PRIME_URL;
-  return configured || new URL(request.url).origin;
-}
-
-export function clientIp(request: Request) {
-  return request.headers.get("x-nf-client-connection-ip") || request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
-}

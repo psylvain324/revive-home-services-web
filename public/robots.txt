@@ -3,5 +3,8 @@ Allow: /
 
 Disallow: /admin
 Disallow: /booking/success
+Disallow: /login
+Disallow: /signup
+Disallow: /thank-you.html
 
 Sitemap: https://www.revivecoservices.com/sitemap.xml

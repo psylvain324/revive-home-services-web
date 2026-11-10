@@ -1,8 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { api } from "./api";
+import { BookingKoalaEmbed } from "./BookingKoalaEmbed";
 import { SiteIcon, type SiteIconName } from "./SiteIcon";
 import { PageShell, PHONE_DISPLAY, PHONE_LINK } from "./SiteChrome";
-import { getSalesVisionAttribution, initializeSalesVision, trackSalesVisionEvent } from "./salesVision";
 
 const services = [
   {
@@ -64,41 +62,15 @@ const services = [
 ];
 
 const faqs = [
-  ["How Does the Online Request Work?", "Choose the service, share a few details about the property, and send your contact information. Revive will review the request and follow up personally to discuss scope, pricing, and availability."],
-  ["Does Submitting the Form Schedule an Appointment?", "No. The online form is a contact request only. An appointment is not scheduled until Revive speaks with you and confirms the details."],
-  ["Can I Request Recurring Service?", "Yes. You can request weekly, biweekly, monthly, one-time, or custom service. Revive will confirm the right plan and schedule with you."],
-  ["What If My Service Needs a Custom Quote?", "That is welcome. Commercial, post-construction, move, and detailed residential projects can all be described in the request form so Revive can follow up with the right questions."],
-  ["Should I Include Access Instructions?", "Share general property details, but never place alarm codes, lock codes, or other sensitive access information in the online form. Arrange those details directly with Revive."],
-  ["How Will Revive Contact Me?", `The team will use the email address or phone number you provide. You can also call ${PHONE_DISPLAY} if you prefer to speak with someone directly.`],
+  ["How Does Online Booking Work?", "Choose a service, enter your property details, review current pricing and availability, then complete the contact and payment steps shown in the secure booking form."],
+  ["Can I Book Recurring Service?", "Yes. Available frequencies are shown inside the booking form so you can choose the plan that fits your home or business."],
+  ["Can I Manage My Appointment Online?", "Yes. Sign in to your customer account to review upcoming and past appointments and manage the account options Revive has enabled."],
+  ["What If My Project Needs a Custom Quote?", "Use the contact form for commercial, post-construction, move, or other custom work that needs a conversation before booking."],
+  ["Where Is My Payment Information Stored?", "Card information is handled by the payment processor connected to BookingKoala. Revive's website does not receive or store your full card number."],
+  ["What If I Need Help?", `Use the contact form or call ${PHONE_DISPLAY}. For an existing booking, signing in first helps you review the appointment details.`],
 ];
 
 function App() {
-  const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [contactMessage, setContactMessage] = useState("");
-
-  useEffect(() => initializeSalesVision(), []);
-
-  const submitContact = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
-    setContactStatus("sending");
-    setContactMessage("");
-    try {
-      const response = await api.post<{ message: string }>("/api/inquiries", {
-        ...data,
-        attribution: getSalesVisionAttribution(),
-      });
-      setContactStatus("sent");
-      setContactMessage(response.message);
-      form.reset();
-      trackSalesVisionEvent("inquiry_submitted", { category: "lead" });
-    } catch (error) {
-      setContactStatus("error");
-      setContactMessage(error instanceof Error ? error.message : "We could not send your message. Please call us instead.");
-    }
-  };
-
   return (
     <PageShell>
       <main id="main">
@@ -108,9 +80,9 @@ function App() {
           <div className="container hero-content">
             <p className="eyebrow">Residential &amp; Commercial Cleaning</p>
             <h1 id="hero-title">Revive Your Space.<br /><em>Reclaim Your Time.</em></h1>
-            <p>Thoughtful, professional cleaning for homes, businesses, move-outs, and post-construction spaces. Send a service request and the Revive team will follow up personally.</p>
+            <p>Thoughtful, professional cleaning for homes, businesses, move-outs, and post-construction spaces. View services, see availability, and book securely online.</p>
             <div className="hero-actions">
-              <a className="button" href="/contact" data-sv-action="request-service" data-sv-label="hero">Request Service</a>
+              <a className="button" href="/book" data-sv-action="book-service" data-sv-label="hero">Book Online</a>
               <a className="text-link" href={PHONE_LINK} data-sv-action="phone" data-sv-label="hero">Call {PHONE_DISPLAY} <span aria-hidden="true">↗</span></a>
             </div>
             <div className="trust-strip" aria-label="Service assurances">
@@ -121,12 +93,12 @@ function App() {
           </div>
         </section>
 
-        <section className="booking-band" aria-label="Online service request steps">
+        <section className="booking-band" aria-label="Online booking steps">
           <div className="container booking-band-grid">
-            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="broom" /></span><div><strong>01</strong><span>Choose Your Clean</span><small>Service, Home Details &amp; Add-Ons</small></div></div>
-            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="message" /></span><div><strong>02</strong><span>Share Your Request</span><small>Priorities, Questions &amp; Preferred Timing</small></div></div>
-            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="phone" /></span><div><strong>03</strong><span>Hear From Revive</span><small>Scope, Pricing &amp; Availability Follow-Up</small></div></div>
-            <a href="/contact" className="button button-light" data-sv-action="request-service" data-sv-label="request-band">Start a Request</a>
+            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="broom" /></span><div><strong>01</strong><span>Choose Your Clean</span><small>Service, Property Details &amp; Extras</small></div></div>
+            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="message" /></span><div><strong>02</strong><span>Pick Your Time</span><small>Live Availability &amp; Clear Pricing</small></div></div>
+            <div className="booking-step"><span className="booking-step-icon"><SiteIcon name="key" /></span><div><strong>03</strong><span>Complete Booking</span><small>Secure Details &amp; Confirmation</small></div></div>
+            <a href="/book" className="button button-light" data-sv-action="book-service" data-sv-label="booking-band">Book Now</a>
           </div>
         </section>
 
@@ -148,7 +120,7 @@ function App() {
                     <h3>{service.name}</h3>
                     <p>{service.description}</p>
                     <ul>{service.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-                    <a className="card-link" href={`/contact?service=${service.id}`} data-sv-action="request-service" data-sv-label={service.id}>Request This Service <span aria-hidden="true">→</span></a>
+                    <a className="card-link" href="/book" data-sv-action="book-service" data-sv-label={service.id}>Book This Service <span aria-hidden="true">→</span></a>
                   </div>
                 </article>
               ))}
@@ -169,12 +141,12 @@ function App() {
               <h2 id="why-title">A Professional Clean, Without the Runaround.</h2>
               <p className="lead">A great cleaning service should make life easier from the first click. Revive combines clear communication, thoughtful follow-through, and service plans built around the property—not a one-size-fits-all checklist.</p>
               <div className="benefit-grid">
-                <div><span>01</span><strong>Easy Service Requests</strong><p>Share the essentials online without committing to an appointment.</p></div>
-                <div><span>02</span><strong>Built Around Your Space</strong><p>Select the service, frequency, add-ons, and property details that matter.</p></div>
-                <div><span>03</span><strong>No Online Commitment</strong><p>Submitting a request does not schedule service or collect payment.</p></div>
-                <div><span>04</span><strong>Human Follow-Through</strong><p>Your request goes to the Revive team for a personal response.</p></div>
+                <div><span>01</span><strong>Simple Online Booking</strong><p>See the choices you need in one guided, mobile-friendly form.</p></div>
+                <div><span>02</span><strong>Built Around Your Space</strong><p>Select the service, frequency, extras, and property details that matter.</p></div>
+                <div><span>03</span><strong>Clear Before You Submit</strong><p>Review available times, pricing, and booking details before finishing.</p></div>
+                <div><span>04</span><strong>Manage It Online</strong><p>Use your customer account to keep appointment details close at hand.</p></div>
               </div>
-              <a className="button" href="/contact" data-sv-action="request-service" data-sv-label="why">Tell Us What You Need</a>
+              <a className="button" href="/book" data-sv-action="book-service" data-sv-label="why">Book Your Cleaning</a>
             </div>
           </div>
         </section>
@@ -192,7 +164,19 @@ function App() {
               <li>Comprehensive and Transparent Pricing</li>
               <li>High Quality Work at an Affordable Price</li>
             </ul>
-            <a className="text-link" href="/contact">Request a Service <span aria-hidden="true">→</span></a>
+            <a className="text-link" href="/book">Book a Service <span aria-hidden="true">→</span></a>
+          </div>
+        </section>
+
+        <section className="reviews-section" id="reviews" aria-labelledby="reviews-title">
+          <div className="container">
+            <div className="section-intro section-intro-centered">
+              <p className="eyebrow">Live Customer Feedback</p>
+              <h2 id="reviews-title">Hear From Revive Customers.</h2>
+              <p>Reviews shown here are collected through completed BookingKoala appointments.</p>
+            </div>
+            <BookingKoalaEmbed kind="reviews" deferUntilVisible />
+            <p className="reviews-empty-note">New feedback appears here after it is published to Revive&apos;s live review feed.</p>
           </div>
         </section>
 
@@ -201,7 +185,7 @@ function App() {
             <div className="faq-heading">
               <p className="eyebrow">Helpful Details</p>
               <h2 id="faq-title">Good Questions. Clear Answers.</h2>
-              <p>Need something specific? Send a request or call and the team will help you plan the right service.</p>
+              <p>Need something specific? Book online, send a message, or call and the team will help you plan the right service.</p>
               <a className="text-link" href={PHONE_LINK}>Call {PHONE_DISPLAY}</a>
             </div>
             <div className="faq-list">
@@ -218,41 +202,32 @@ function App() {
         <section className="contact-section" id="contact" aria-labelledby="contact-title">
           <div className="container contact-grid">
             <div className="contact-copy">
-              <p className="eyebrow">Have a Question?</p>
-              <h2 id="contact-title">Tell Us What You Need.</h2>
-              <p>Questions, commercial properties, construction cleanup, and unique projects are welcome. Share the basics and Revive can follow up.</p>
+              <p className="eyebrow">Need a Hand?</p>
+              <h2 id="contact-title">We&apos;re Here to Help.</h2>
+              <p>Questions, commercial properties, construction cleanup, and unique projects are welcome. Choose the best way to reach Revive.</p>
               <div className="contact-callout">
                 <span>Prefer to Talk?</span>
                 <a href={PHONE_LINK} data-sv-action="phone" data-sv-label="contact">{PHONE_DISPLAY}</a>
               </div>
             </div>
-            <form className="contact-form" onSubmit={submitContact} aria-label="Contact Revive Co">
-              <div className="form-row">
-                <label>First Name<input name="firstName" autoComplete="given-name" required /></label>
-                <label>Last Name<input name="lastName" autoComplete="family-name" required /></label>
-              </div>
-              <div className="form-row">
-                <label>Email<input name="email" type="email" autoComplete="email" required /></label>
-                <label>Phone<input name="phone" type="tel" autoComplete="tel" required /></label>
-              </div>
-              <label>What Can We Help With?
-                <select name="service" defaultValue="" required>
-                  <option value="" disabled>Select a Service</option>
-                  {services.map((service) => <option key={service.id} value={service.id}>{service.name}</option>)}
-                  <option value="other">Something Else</option>
-                </select>
-              </label>
-              <label>Message<textarea name="message" rows={5} required placeholder="Property type, approximate size, preferred timing, and anything else we should know." /></label>
-              <label className="consent-row"><input name="consent" type="checkbox" required /><span>I agree that Revive Co may contact me about this request. Message and data rates may apply.</span></label>
-              <button className="button" type="submit" disabled={contactStatus === "sending"}>{contactStatus === "sending" ? "Sending…" : "Send Inquiry"}</button>
-              <p className={`form-status ${contactStatus}`} role="status">{contactMessage}</p>
-            </form>
+            <div className="contact-options" aria-label="Revive Co customer options">
+              <article>
+                <span aria-hidden="true"><SiteIcon name="message" /></span>
+                <div><h3>Send a Message</h3><p>Use the secure contact form for questions, custom work, or help with an appointment.</p></div>
+                <a className="button" href="/contact" data-sv-action="contact-form" data-sv-label="home-contact-card">Contact Revive</a>
+              </article>
+              <article>
+                <span aria-hidden="true"><SiteIcon name="key" /></span>
+                <div><h3>Manage a Booking</h3><p>Sign in to review upcoming and past appointments and your customer information.</p></div>
+                <a className="button button-ghost" href="/login">Customer Login</a>
+              </article>
+            </div>
           </div>
         </section>
       </main>
       <div className="mobile-actions" aria-label="Quick actions">
         <a href={PHONE_LINK} data-sv-action="phone" data-sv-label="mobile">Call</a>
-        <a href="/contact" data-sv-action="request-service" data-sv-label="mobile">Request Service</a>
+        <a href="/book" data-sv-action="book-service" data-sv-label="mobile">Book Now</a>
       </div>
     </PageShell>
   );
