@@ -79,7 +79,7 @@ function App() {
           <div className="hero-wash" />
           <div className="container hero-content">
             <p className="eyebrow">Residential &amp; Commercial Cleaning</p>
-            <h1 id="hero-title">Revive Your Space.<br /><em>Reclaim Your Time.</em></h1>
+            <h1 id="hero-title">Revive Your Space. <br /><em>Reclaim Your Time.</em></h1>
             <p>Thoughtful, professional cleaning for homes, businesses, move-outs, and post-construction spaces. View services, see availability, and book securely online.</p>
             <div className="hero-actions">
               <a className="button" href="/book" data-sv-action="book-service" data-sv-label="hero">Book Online</a>
@@ -156,7 +156,7 @@ function App() {
           <div className="feature-copy">
             <p className="eyebrow">Your Priorities, Our Plan</p>
             <h2>The Right Cleaning for Whatever Reason, in Whatever Season</h2>
-            <p>Recurring Home maintenance, a move or home listing, a one off deep clean, a business that needs dependable upkeep, or the final phase of a renovation - Revive fits the job for whatever you need.</p>
+            <p>Recurring home maintenance, a move or listing, a one-off deep clean, dependable business upkeep, or post-renovation cleanup—Revive tailors the service to the job.</p>
             <ul className="check-list">
               <li>One-Time and Recurring Options</li>
               <li>Residential and Commercial Properties</li>

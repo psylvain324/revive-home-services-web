@@ -1,7 +1,7 @@
 import type { Config } from "@netlify/functions";
 import { requireAdmin } from "./_lib/auth.mts";
 import { database } from "./_lib/db.mts";
-import { body, cleanText, fail, json, safeNumber, validDate } from "./_lib/http.mts";
+import { body, cleanText, fail, json, RequestBodyError, safeNumber, validDate } from "./_lib/http.mts";
 
 function mapExpense(row: Record<string, unknown>) {
   return { id: String(row.id), expenseDate: String(row.expense_date).slice(0, 10), vendor: String(row.vendor), category: String(row.category),
@@ -17,7 +17,7 @@ export default async (request: Request) => {
       const result = await db.pool.query("SELECT * FROM expenses WHERE expense_date >= CURRENT_DATE-($1::int-1) ORDER BY expense_date DESC, created_at DESC LIMIT 2000", [range]);
       return json({ expenses: result.rows.map(mapExpense) });
     }
-    const input = await body<Record<string, unknown>>(request);
+    const input = await body<Record<string, unknown>>(request, 8_192);
     if (request.method === "DELETE") {
       const id = cleanText(input.id, 50); if (!id) return fail("Choose an expense to remove.");
       await db.pool.query("DELETE FROM expenses WHERE id=$1", [id]); return json({ deleted: true });
@@ -28,7 +28,11 @@ export default async (request: Request) => {
     if (!validDate(date) || !vendor || !category || amountCents <= 0) return fail("Enter a valid date, vendor, category, and amount.");
     const result = await db.pool.query("INSERT INTO expenses (expense_date,vendor,category,description,amount_cents,tax_deductible) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *", [date, vendor, category, description, amountCents, Boolean(input.taxDeductible)]);
     return json(mapExpense(result.rows[0]), 201);
-  } catch (error) { console.error("admin-expenses", error); return fail("Unable to update expenses.", 503); }
+  } catch (error) {
+    if (error instanceof RequestBodyError) return fail(error.message, error.status);
+    console.error("admin-expenses", error);
+    return fail("Unable to update expenses.", 503);
+  }
 };
 
 export const config: Config = { path: "/api/admin-expenses" };

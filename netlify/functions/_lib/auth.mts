@@ -2,10 +2,17 @@ import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 import { json } from "./http.mts";
 
 const COOKIE = "revive_admin";
+const UNSAFE_SECRET_PATTERN = /(change[-_ ]?me|example|placeholder|replace[-_ ]?with|your[-_ ]?secret)/i;
+
+function adminEmail() {
+  return (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+}
 
 function secret() {
-  const value = process.env.SESSION_SECRET;
-  if (!value || value.length < 32) throw new Error("SESSION_SECRET must contain at least 32 characters.");
+  const value = process.env.SESSION_SECRET || "";
+  if (value.length < 32 || UNSAFE_SECRET_PATTERN.test(value) || new Set(value).size < 10) {
+    throw new Error("SESSION_SECRET must be a unique, randomly generated value containing at least 32 characters.");
+  }
   return value;
 }
 
@@ -38,8 +45,11 @@ export function readSession(request: Request): { email: string } | null {
     const expected = Buffer.from(sign(payload));
     const received = Buffer.from(signature);
     if (expected.length !== received.length || !timingSafeEqual(expected, received)) return null;
-    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { email: string; exp: number };
-    return parsed.exp > Date.now() && parsed.email ? { email: parsed.email } : null;
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { email?: unknown; exp?: unknown };
+    const expectedEmail = adminEmail();
+    const email = typeof parsed.email === "string" ? parsed.email.trim().toLowerCase() : "";
+    const expiresAt = typeof parsed.exp === "number" && Number.isFinite(parsed.exp) ? parsed.exp : 0;
+    return expectedEmail && email === expectedEmail && expiresAt > Date.now() ? { email } : null;
   } catch { return null; }
 }
 

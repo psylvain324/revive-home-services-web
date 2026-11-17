@@ -11,6 +11,7 @@ declare module "iframe-resizer/js/iframeResizer" {
   type ResizeOptions = {
     checkOrigin: boolean;
     heightCalculationMethod?: "bodyOffset" | "bodyScroll" | "documentElementOffset" | "documentElementScroll" | "lowestElement" | "max" | "min" | "taggedElement";
+    onResized?: () => void;
     scrolling?: boolean;
     warningTimeout?: number;
   };

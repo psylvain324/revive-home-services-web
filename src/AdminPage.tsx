@@ -42,7 +42,7 @@ function AdminLogin({ onLogin }: { onLogin: (session: AdminSession) => void }) {
     <main className="admin-login-page">
       <div className="admin-login-art">
         <a href="/" className="admin-brand"><img src="/images/revive-homeservices-logo-compact.png" alt="Revive Co" width="320" height="320" /></a>
-        <div><p className="eyebrow">Historical Operations Portal</p><h1>Your Records.<br />Your Numbers.<br /><em>One Clean View.</em></h1><p>Historical website records, first-party host analytics, and a separate expense ledger. Current bookings, customers, and revenue are managed in BookingKoala.</p></div>
+        <div><p className="eyebrow">Historical Operations Portal</p><h1>Your Records. <br />Your Numbers. <br /><em>One Clean View.</em></h1><p>Historical website records, first-party host analytics, and a separate expense ledger. Current bookings, customers, and revenue are managed in BookingKoala.</p></div>
         <p className="admin-credit">Platform by <a href="https://salesvisionconsulting.com">Sales Vision Consulting</a></p>
       </div>
       <div className="admin-login-panel">
@@ -85,6 +85,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [bookingSearch, setBookingSearch] = useState("");
   const [bookingFilter, setBookingFilter] = useState("all");
+  const [emailTesting, setEmailTesting] = useState(false);
 
   const loadData = useCallback(async (days: number) => {
     setLoading(true);
@@ -157,6 +158,20 @@ export default function AdminPage() {
       setNotice("Expense removed.");
       void loadData(range);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to remove expense."); }
+  };
+
+  const sendEmailTest = async () => {
+    setEmailTesting(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await api.post<{ sent: boolean; recipient: string }>("/api/admin-email-test", { requestId: crypto.randomUUID() });
+      setNotice(`Resend accepted the test message for ${result.recipient}.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to send the Resend test email.");
+    } finally {
+      setEmailTesting(false);
+    }
   };
 
   if (loading && session == null) return <div className="admin-loading">Loading Revive operations…</div>;
@@ -235,6 +250,11 @@ export default function AdminPage() {
               <div className="card-heading"><div><span>System of Record</span><h2>BookingKoala Is Now Active.</h2></div></div>
               <p className="card-intro">Availability, services, pricing, extras, payments, taxes, providers, and notifications are now configured in BookingKoala. The retired website settings are no longer exposed here, preventing two systems from drifting out of sync.</p>
               <a className="button" href="/book" target="_blank" rel="noopener noreferrer">Open Customer Booking Form ↗</a>
+            </article>
+            <article className="admin-card settings-card">
+              <div className="card-heading"><div><span>Server Email</span><h2>Resend Delivery Check.</h2></div></div>
+              <p className="card-intro">BookingKoala remains responsible for booking and contact confirmations. This protected check verifies the website&apos;s separate, server-only Resend configuration using a fixed test recipient; it cannot send to an address supplied by a visitor.</p>
+              <button className="button" type="button" disabled={emailTesting} onClick={sendEmailTest}>{emailTesting ? "Sending Test…" : "Send Resend Test"}</button>
             </article>
           </section>
         )}

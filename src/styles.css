@@ -173,6 +173,11 @@ h1 em, h2 em { color: var(--sage); font-weight: 400; }
 .booking-koala-loading { position: absolute; z-index: 2; inset: 0 0 60px; min-height: 280px; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 30px; color: var(--ink-soft); background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(241,234,220,.93)); text-align: center; }
 .booking-koala-loading span { width: 36px; height: 36px; border: 3px solid rgba(43,75,55,.18); border-top-color: var(--forest); border-radius: 50%; animation: booking-koala-spin .8s linear infinite; }
 .booking-koala-loading p { margin: 0; font-size: .78rem; font-weight: 700; letter-spacing: .04em; }
+.booking-koala-unavailable { min-height: 440px; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 44px 24px; color: var(--ink); background: linear-gradient(135deg, #fff, #f6f1e7); text-align: center; }
+.booking-koala-unavailable > div { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; color: var(--gold-ink); background: #efe2c8; font-size: 1.15rem; }
+.booking-koala-unavailable h3 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.booking-koala-unavailable p { max-width: 580px; margin: 0; color: var(--ink-soft); }
+.booking-koala-unavailable a { color: var(--forest); font-weight: 700; }
 @keyframes booking-koala-spin { to { transform: rotate(360deg); } }
 .booking-koala-fallback { position: relative; z-index: 3; min-height: 60px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; align-items: center; padding: 14px 20px; border-top: 1px solid var(--line); color: var(--ink-soft); background: #f8f5ed; font-size: .72rem; text-align: center; }
 .booking-koala-fallback p { margin: 0; color: var(--danger); }

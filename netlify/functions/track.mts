@@ -1,6 +1,6 @@
 import type { Config } from "@netlify/functions";
 import { database } from "./_lib/db.mts";
-import { body, cleanText, json } from "./_lib/http.mts";
+import { body, cleanText, json, RequestBodyError } from "./_lib/http.mts";
 
 type TrackInput = Record<string, unknown> & { attribution?: Record<string, unknown> };
 const allowedEvents = new Set(["conversion_click", "page_view"]);
@@ -8,9 +8,8 @@ const allowedActions = new Set(["book-service", "contact-form", "phone"]);
 
 export default async (request: Request) => {
   if (request.method !== "POST") return new Response(null, { status: 405 });
-  if (Number(request.headers.get("content-length") || 0) > 16_384) return json({ accepted: false }, 413);
   try {
-    const input = await body<TrackInput>(request);
+    const input = await body<TrackInput>(request, 16_384);
     const event = cleanText(input.event, 80);
     const action = cleanText(input.action, 100);
     const anonymousId = cleanText(input.anonymousId, 100);
@@ -29,6 +28,7 @@ export default async (request: Request) => {
     );
     return json({ accepted: true }, 202);
   } catch (error) {
+    if (error instanceof RequestBodyError) return json({ accepted: false }, error.status);
     console.error("track", error);
     return json({ accepted: false }, 202);
   }

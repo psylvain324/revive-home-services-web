@@ -60,6 +60,8 @@ export function BookingKoalaEmbed({ deferUntilVisible = false, kind }: BookingKo
   const [active, setActive] = useState(!deferUntilVisible);
   const [frameLoaded, setFrameLoaded] = useState(false);
   const [resizeError, setResizeError] = useState(false);
+  const [resized, setResized] = useState(false);
+  const [reviewsUnavailable, setReviewsUnavailable] = useState(false);
   const sourceUrl = new URL(`${BOOKING_KOALA_ORIGIN}${definition.path}`);
   for (const [key, value] of Object.entries(getBookingKoalaAttributionParameters())) sourceUrl.searchParams.set(key, value);
   const source = sourceUrl.toString();
@@ -94,6 +96,11 @@ export function BookingKoalaEmbed({ deferUntilVisible = false, kind }: BookingKo
         const [resizedFrame] = iframeResizer({
           checkOrigin: true,
           heightCalculationMethod: "bodyOffset",
+          onResized: () => {
+            if (cancelled) return;
+            setResized(true);
+            setReviewsUnavailable(false);
+          },
           scrolling: true,
           // Some tenant surfaces (notably an empty reviews feed) do not send a
           // resize handshake. The initial height and scroll fallback still work.
@@ -110,9 +117,17 @@ export function BookingKoalaEmbed({ deferUntilVisible = false, kind }: BookingKo
     };
   }, [active, source]);
 
+  useEffect(() => {
+    if (!active || !frameLoaded || kind !== "reviews" || resized) return;
+    const timeout = window.setTimeout(() => setReviewsUnavailable(true), 8_000);
+    return () => window.clearTimeout(timeout);
+  }, [active, frameLoaded, kind, resized]);
+
+  const contentReady = frameLoaded && (kind !== "reviews" || resized);
+
   return (
     <div
-      className={`booking-koala-embed${frameLoaded ? " is-loaded" : ""}`}
+      className={`booking-koala-embed${contentReady ? " is-loaded" : ""}${reviewsUnavailable ? " is-unavailable" : ""}`}
       ref={containerRef}
       style={{ minHeight: definition.initialHeight }}
     >
@@ -124,10 +139,17 @@ export function BookingKoalaEmbed({ deferUntilVisible = false, kind }: BookingKo
       )}
       {active && (
         <>
-          {!frameLoaded && (
+          {!contentReady && !reviewsUnavailable && (
             <div className="booking-koala-loading" role="status">
               <span aria-hidden="true" />
               <p>Loading {definition.fallbackLabel}…</p>
+            </div>
+          )}
+          {reviewsUnavailable && (
+            <div className="booking-koala-unavailable" role="status">
+              <div aria-hidden="true">★</div>
+              <h3>Customer feedback is being updated.</h3>
+              <p>The live review feed is not available right now. Please check back soon or call Revive Co at <a href="tel:+14805825615">(480) 582-5615</a>.</p>
             </div>
           )}
           <iframe
@@ -141,6 +163,7 @@ export function BookingKoalaEmbed({ deferUntilVisible = false, kind }: BookingKo
             src={source}
             style={{ height: definition.initialHeight }}
             title={definition.title}
+            hidden={reviewsUnavailable}
           />
         </>
       )}

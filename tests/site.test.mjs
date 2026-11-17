@@ -86,6 +86,8 @@ test("all BookingKoala experiences share one hardened embed implementation", asy
   assert.match(embed, /import\("iframe-resizer\/js\/iframeResizer"\)/);
   assert.match(embed, /checkOrigin: true/);
   assert.match(embed, /warningTimeout: 0/);
+  assert.match(embed, /onResized/);
+  assert.match(embed, /Customer feedback is being updated/);
   assert.match(embed, /removeListeners/);
   assert.doesNotMatch(embed, /\/resources\/embed\.js|checkOrigin: false/);
   assert.match(embed, /IntersectionObserver/);
@@ -136,12 +138,19 @@ test("legacy public booking and payment APIs are removed", async () => {
 
   const [packageJson, envExample] = await Promise.all([read("package.json"), read(".env.example")]);
   assert.doesNotMatch(packageJson, /"stripe"/);
-  assert.doesNotMatch(envExample, /STRIPE_|RESEND_|CONTACT_FROM_/);
+  assert.doesNotMatch(envExample, /STRIPE_|CONTACT_FROM_/);
+  for (const variable of ["RESEND_API_KEY", "RESEND_FROM_EMAIL", "RESEND_REPLY_TO_EMAIL", "RESEND_TEST_TO_EMAIL"]) {
+    assert.ok(envExample.includes(`${variable}=`), `missing ${variable} configuration placeholder`);
+  }
+  assert.match(envExample, /RESEND_API_KEY=\n/);
+  assert.match(envExample, /SESSION_SECRET=\n/);
 });
 
 test("admin authentication requires environment credentials and platform rate limiting", async () => {
-  const [adminLogin, passwordHasher] = await Promise.all([
+  const [adminLogin, auth, http, passwordHasher] = await Promise.all([
     read("netlify/functions/admin-login.mts"),
+    read("netlify/functions/_lib/auth.mts"),
+    read("netlify/functions/_lib/http.mts"),
     read("scripts/hash-admin-password.mjs"),
   ]);
   assert.match(adminLogin, /process\.env\.ADMIN_EMAIL/);
@@ -149,6 +158,16 @@ test("admin authentication requires environment credentials and platform rate li
   assert.match(adminLogin, /Administrator access is not configured/);
   assert.match(adminLogin, /rateLimit/);
   assert.match(adminLogin, /aggregateBy: \["ip"\]/);
+  assert.match(adminLogin, /body<.*>\(request, 8_192\)/);
+  assert.match(adminLogin, /password\.length > 256/);
+  assert.match(adminLogin, /windowSize: 900/);
+  assert.doesNotMatch(adminLogin, /windowSize: 15 \* 60/);
+  assert.match(auth, /UNSAFE_SECRET_PATTERN/);
+  assert.match(auth, /email === expectedEmail/);
+  assert.match(http, /Cross-Origin-Resource-Policy/);
+  assert.match(http, /Referrer-Policy/);
+  assert.match(http, /X-Content-Type-Options/);
+  assert.match(http, /X-Robots-Tag/);
   for (const forbidden of ["STATIC_ADMIN", ["password", "123"].join(""), ["psylvain324", "gmail.com"].join("@")]) {
     assert.ok(!adminLogin.includes(forbidden), `hard-coded admin credential found: ${forbidden}`);
   }
@@ -157,9 +176,35 @@ test("admin authentication requires environment credentials and platform rate li
   assert.match(passwordHasher, /setRawMode\(true\)/);
 });
 
+test("Resend verification is server-only, fixed-recipient, authenticated, and rate limited", async () => {
+  const [emailLibrary, endpoint, script, admin, packageJson] = await Promise.all([
+    read("lib/resend.mjs"),
+    read("netlify/functions/admin-email-test.mts"),
+    read("scripts/test-resend.mjs"),
+    read("src/AdminPage.tsx"),
+    read("package.json"),
+  ]);
+  assert.match(emailLibrary, /process\.env/);
+  assert.match(emailLibrary, /RESEND_API_KEY/);
+  assert.match(emailLibrary, /RESEND_FROM_EMAIL/);
+  assert.match(emailLibrary, /RESEND_TEST_TO_EMAIL/);
+  assert.match(emailLibrary, /Idempotency-Key/);
+  assert.match(emailLibrary, /AbortController/);
+  assert.doesNotMatch(emailLibrary, /VITE_|console\.(log|error).*apiKey/);
+  assert.match(endpoint, /requireAdmin\(request\)/);
+  assert.match(endpoint, /sendConfiguredTestEmail/);
+  assert.match(endpoint, /windowLimit: 2/);
+  assert.match(endpoint, /windowSize: 3600/);
+  assert.doesNotMatch(endpoint, /input\.(to|recipient|email)/);
+  assert.match(script, /--send/);
+  assert.match(admin, /Send Resend Test/);
+  assert.match(packageJson, /"email:check"/);
+  assert.match(packageJson, /"email:test"/);
+});
+
 test("Netlify policy narrowly allows BookingKoala and protects account routes", async () => {
   const config = await read("netlify.toml");
-  assert.match(config, /command = "npm run build"/);
+  assert.match(config, /command = "npm run build:netlify"/);
   assert.match(config, /publish = "dist"/);
   assert.match(config, /directory = "netlify\/functions"/);
   assert.match(config, /frame-src https:\/\/reviveco\.bookingkoala\.com/);
@@ -248,7 +293,7 @@ test("privacy, terms, accessibility, sitemap, and robots match the new integrati
 test("internal operations endpoints and transactional history schema remain available", async () => {
   const functions = await readdir(new URL("../netlify/functions", import.meta.url));
   for (const name of [
-    "admin-login.mts", "admin-session.mts", "admin-logout.mts",
+    "admin-login.mts", "admin-session.mts", "admin-logout.mts", "admin-email-test.mts",
     "admin-dashboard.mts", "admin-bookings.mts", "admin-inquiries.mts", "admin-customers.mts",
     "admin-expenses.mts", "admin-analytics.mts", "analytics-retention.mts", "track.mts",
   ]) assert.ok(functions.includes(name), `missing internal endpoint: ${name}`);

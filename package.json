@@ -4,18 +4,22 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.6"
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "dev:netlify": "vite --host 0.0.0.0 --mode netlify",
     "build": "tsc --noEmit && vite build && node scripts/prerender-routes.mjs",
+    "build:netlify": "npm run lint && npm test",
     "preview": "vite preview --host 0.0.0.0",
-    "lint": "eslint src netlify/functions",
+    "lint": "eslint src netlify/functions lib scripts tests",
     "check": "tsc --noEmit",
-    "test": "npm run build && node --test tests/site.test.mjs",
+    "test": "npm run build && node --no-warnings --experimental-strip-types --test tests/*.test.mjs",
     "audit:site": "npm run lint && npm test && npm audit --audit-level=high",
-    "admin:hash": "node scripts/hash-admin-password.mjs"
+    "audit:deploy": "npm run audit:site && npm run email:check",
+    "admin:hash": "node scripts/hash-admin-password.mjs",
+    "email:check": "node --env-file-if-exists=.env.resend.local scripts/test-resend.mjs",
+    "email:test": "node --env-file-if-exists=.env.resend.local scripts/test-resend.mjs --send"
   },
   "dependencies": {
     "@netlify/database": "^2.0.1",
